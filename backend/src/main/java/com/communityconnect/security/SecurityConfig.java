@@ -74,8 +74,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/api/communities/public/**").permitAll()
-                    .requestMatchers("/api/services/public/**").permitAll();
+                    .requestMatchers("/api/communities/public", "/api/communities/public/**").permitAll()
+                    .requestMatchers("/api/services/public", "/api/services/public/**", "/api/services/catalog").permitAll();
 
                 if (enableH2Console) {
                     auth.requestMatchers("/h2-console/**").permitAll();
