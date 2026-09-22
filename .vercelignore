@@ -1,0 +1,26 @@
+# Python local visualizer & desktop GUI scripts
+*.py
+backend_gui.py
+terminal_visualizer.py
+
+# Shell launchers & dev scripts
+*.sh
+launch-visualizer.sh
+launch-terminal-console.sh
+
+# Backend directory (Deployed separately on Render)
+backend/
+
+# Internal documentation and meta files
+*.md
+PROJECT_REPORT.md
+metadata.json
+LICENSE
+
+# Node modules & local env
+node_modules/
+.env
+.env.local
+.env.development
+.DS_Store
+*.log

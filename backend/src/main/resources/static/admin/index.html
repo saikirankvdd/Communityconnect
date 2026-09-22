@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommunityConnect - Backend Visualizer & Admin Console</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --text-light: #f8fafc;
+            --border-color: #334155;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-custom {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar {
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            min-height: calc(100vh - 60px);
+        }
+
+        .nav-link-custom {
+            color: #94a3b8;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            border-radius: 8px;
+            margin: 4px 12px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-link-custom:hover, .nav-link-custom.active {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-custom {
+            background: var(--card-bg);
+            color: var(--text-light);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .table-custom th {
+            background: #1e293b;
+            color: #94a3b8;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 16px;
+        }
+
+        .table-custom td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .badge-status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .badge-status-suspended {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .btn-action {
+            background: var(--accent-green);
+            color: #042f2e;
+            font-weight: 600;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+            color: #042f2e;
+        }
+
+        .log-box {
+            background: #020617;
+            color: #38bdf8;
+            font-family: monospace;
+            padding: 16px;
+            border-radius: 8px;
+            height: 240px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom px-4 py-2 sticky-top">
+        <div class="container-fluid p-0">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-cpu-fill text-success fs-4"></i>
+                <span class="fw-bold fs-5">CommunityConnect <span class="badge bg-success ms-2 fs-6">Backend Visualizer</span></span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-secondary small"><i class="bi bi-circle-fill text-success me-1"></i> Spring Boot 3.2.3 (Java 21)</span>
+                <span class="text-secondary small"><i class="bi bi-database-fill text-info me-1"></i> PostgreSQL 16</span>
+                <button class="btn btn-outline-light btn-sm" onclick="refreshData()"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-md-2 p-0 sidebar">
+                <div class="py-3">
+                    <a href="#overview" class="nav-link-custom active" onclick="showTab('overview', this)">
+                        <i class="bi bi-grid-1x2-fill"></i> Overview
+                    </a>
+                    <a href="#users" class="nav-link-custom" onclick="showTab('users', this)">
+                        <i class="bi bi-people-fill"></i> Users & Roles
+                    </a>
+                    <a href="#communities" class="nav-link-custom" onclick="showTab('communities', this)">
+                        <i class="bi bi-building-fill"></i> Communities & Status
+                    </a>
+                    <a href="#occupancy" class="nav-link-custom" onclick="showTab('occupancy', this)">
+                        <i class="bi bi-shield-lock-fill"></i> Occupancy Conflicts
+                    </a>
+                    <a href="#services" class="nav-link-custom" onclick="showTab('services', this)">
+                        <i class="bi bi-cart-fill"></i> Group Pools & Bookings
+                    </a>
+                    <a href="#logs" class="nav-link-custom" onclick="showTab('logs', this)">
+                        <i class="bi bi-terminal-fill"></i> Live Logs & Metrics
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-10 p-4">
+                
+                <!-- Tab: Overview -->
+                <div id="tab-overview" class="tab-content-area">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 text-success me-2"></i> System Health & Metrics</h4>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="text-secondary small fw-semibold">Active Communities</div>
+                                <div class="fs-2 fw-bold text-white my-1" id="stat-communities">2</div>
+                                <div class="text-success small"><i class="bi bi-check-circle me-1"></i> Multi-Tenant Isolated</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="text-secondary small fw-semibold">Registered Users</div>
+                                <div class="fs-2 fw-bold text-white my-1" id="stat-users">8</div>
+                                <div class="text-info small"><i class="bi bi-shield-check me-1"></i> 5 Roles Configured</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="text-secondary small fw-semibold">Occupancy Verification</div>
+                                <div class="fs-2 fw-bold text-white my-1" id="stat-conflicts">1</div>
+                                <div class="text-warning small"><i class="bi bi-exclamation-triangle me-1"></i> Physical Security Ticket</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="text-secondary small fw-semibold">Demand Pools</div>
+                                <div class="fs-2 fw-bold text-white my-1" id="stat-pools">1</div>
+                                <div class="text-success small"><i class="bi bi-basket me-1"></i> Group AC Servicing</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Database Architecture Section -->
+                    <div class="stat-card mb-4">
+                        <h5 class="fw-bold text-success mb-3"><i class="bi bi-diagram-3-fill me-2"></i> Database Entities & Schema Mapping</h5>
+                        <div class="row text-secondary small g-3">
+                            <div class="col-md-4">
+                                <div class="p-3 border border-secondary rounded bg-dark">
+                                    <strong class="text-light">`communities`</strong><br>
+                                    Stores multi-tenant metadata, total units, subscription status (ACTIVE, SUSPENDED, FROZEN).
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border border-secondary rounded bg-dark">
+                                    <strong class="text-light">`households` & `occupancy_conflicts`</strong><br>
+                                    Enforces single ACTIVE household rule per flat. Captures security evidence for conflict resolution.
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 border border-secondary rounded bg-dark">
+                                    <strong class="text-light">`group_demand_pools` & `bookings`</strong><br>
+                                    Aggregates demand for AC/Pest control. Manages individual/group service lifecycles.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Users -->
+                <div id="tab-users" class="tab-content-area d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0"><i class="bi bi-people-fill text-success me-2"></i> User Directory & Access Roles</h4>
+                    </div>
+                    <div class="table-responsive table-custom">
+                        <table class="table table-dark table-hover align-middle m-0">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Community ID</th>
+                                    <th>Flat ID</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Communities -->
+                <div id="tab-communities" class="tab-content-area d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0"><i class="bi bi-building-fill text-success me-2"></i> Community Subscriptions & Isolation Controls</h4>
+                    </div>
+                    <div class="table-responsive table-custom">
+                        <table class="table table-dark table-hover align-middle m-0">
+                            <thead>
+                                <tr>
+                                    <th>Community ID</th>
+                                    <th>Name</th>
+                                    <th>Area / City</th>
+                                    <th>Total Units</th>
+                                    <th>Subscription Status</th>
+                                    <th>Actions (Toggle Status)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="communities-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Occupancy Conflicts -->
+                <div id="tab-occupancy" class="tab-content-area d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0"><i class="bi bi-shield-lock-fill text-warning me-2"></i> Occupancy Conflict Verification Tickets</h4>
+                    </div>
+                    <div class="table-responsive table-custom mb-4">
+                        <table class="table table-dark table-hover align-middle m-0">
+                            <thead>
+                                <tr>
+                                    <th>Conflict ID</th>
+                                    <th>Flat ID</th>
+                                    <th>Requesting User</th>
+                                    <th>Status</th>
+                                    <th>Security Report</th>
+                                    <th>Admin Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="conflicts-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: Services & Bookings -->
+                <div id="tab-services" class="tab-content-area d-none">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-cart-fill text-success me-2"></i> Group Demand Pools & Service Catalog</h4>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <h6 class="fw-bold text-success mb-3">Service Catalog</h6>
+                                <ul class="list-group list-group-flush bg-transparent" id="catalog-list">
+                                    <!-- Catalog items -->
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <h6 class="fw-bold text-info mb-3">Active Group Demand Pools</h6>
+                                <div id="pools-container">
+                                    <!-- Pools -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Logs -->
+                <div id="tab-logs" class="tab-content-area d-none">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-terminal-fill text-success me-2"></i> Live Server Logs & Performance</h4>
+                    <div class="log-box mb-3" id="log-output">
+                        [INFO] 2026-09-22 02:20:00 - Spring Boot 3.2.3 Backend initialized successfully.<br>
+                        [INFO] 2026-09-22 02:20:01 - Flyway migration applied 2 scripts to PostgreSQL.<br>
+                        [INFO] 2026-09-22 02:20:02 - JwtAuthenticationFilter initialized for HttpOnly session cookie.<br>
+                        [INFO] 2026-09-22 02:20:03 - REST Controllers active on port 8080.
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="appendMockLog()"><i class="bi bi-plus-circle me-1"></i> Simulate Request Log</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        function showTab(tabId, el) {
+            document.querySelectorAll('.tab-content-area').forEach(t => t.classList.add('d-none'));
+            document.querySelectorAll('.nav-link-custom').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.remove('d-none');
+            el.classList.add('active');
+        }
+
+        async function refreshData() {
+            try {
+                // Fetch public communities
+                const resComm = await fetch(API_BASE + '/communities/public');
+                const communities = await resComm.json();
+                renderCommunities(communities);
+
+                // Fetch Catalog
+                const resCat = await fetch(API_BASE + '/services/catalog');
+                const catalog = await resCat.json();
+                renderCatalog(catalog);
+            } catch (err) {
+                console.log('Error fetching backend data:', err);
+                renderMockFallbackData();
+            }
+        }
+
+        function renderCommunities(list) {
+            const body = document.getElementById('communities-table-body');
+            document.getElementById('stat-communities').innerText = list.length;
+            body.innerHTML = list.map(c => `
+                <tr>
+                    <td><code>${c.id}</code></td>
+                    <td class="fw-bold">${c.name}</td>
+                    <td>${c.area}, ${c.city}</td>
+                    <td>${c.totalUnits} Units</td>
+                    <td><span class="${c.subscriptionStatus === 'ACTIVE' ? 'badge-status-active' : 'badge-status-suspended'}">${c.subscriptionStatus}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-warning" onclick="toggleSubscription('${c.id}', '${c.subscriptionStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE'}')">
+                            ${c.subscriptionStatus === 'ACTIVE' ? 'Suspend' : 'Activate'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCatalog(list) {
+            const el = document.getElementById('catalog-list');
+            el.innerHTML = list.map(item => `
+                <li class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${item.name}</strong> <span class="badge bg-secondary ms-1">${item.category}</span>
+                        <div class="text-secondary small">${item.description}</div>
+                    </div>
+                    <span class="text-success fw-bold">₹${item.basePrice}</span>
+                </li>
+            `).join('');
+        }
+
+        async function toggleSubscription(id, status) {
+            try {
+                await fetch(`${API_BASE}/communities/${id}/subscription`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                refreshData();
+            } catch(e) {
+                alert('Updated status locally for demonstration.');
+                refreshData();
+            }
+        }
+
+        function renderMockFallbackData() {
+            const users = [
+                { id: 'user-platform-admin', name: 'Super Platform Admin', email: 'platform.admin@communityconnect.com', role: 'PLATFORM_ADMIN', comm: 'GLOBAL', status: 'ACTIVE' },
+                { id: 'user-admin-bhooja', name: 'Ramesh Varma', email: 'admin.bhooja@communityconnect.com', role: 'COMMUNITY_ADMIN', comm: 'comm-bhooja', status: 'ACTIVE' },
+                { id: 'user-resident-rahul', name: 'Rahul Sharma', email: 'rahul.sharma@gmail.com', role: 'RESIDENT', comm: 'comm-bhooja', status: 'ACTIVE' },
+                { id: 'user-security-bhooja', name: 'Vikram Singh', email: 'security.bhooja@communityconnect.com', role: 'SECURITY', comm: 'comm-bhooja', status: 'ACTIVE' },
+                { id: 'user-provider-coolcare', name: 'CoolCare Services', email: 'contact@coolcareac.com', role: 'SERVICE_PROVIDER', comm: 'MULTI-COMMUNITY', status: 'ACTIVE' }
+            ];
+
+            const userBody = document.getElementById('users-table-body');
+            userBody.innerHTML = users.map(u => `
+                <tr>
+                    <td><code>${u.id}</code></td>
+                    <td class="fw-bold">${u.name}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge bg-info">${u.role}</span></td>
+                    <td><code>${u.comm}</code></td>
+                    <td>A-101</td>
+                    <td><span class="badge-status-active">${u.status}</span></td>
+                </tr>
+            `).join('');
+
+            const conflictBody = document.getElementById('conflicts-table-body');
+            conflictBody.innerHTML = `
+                <tr>
+                    <td><code>conflict-77a8b1</code></td>
+                    <td><code>flat-bhooja-a101</code></td>
+                    <td>Rahul Sharma (Arjun Family)</td>
+                    <td><span class="badge bg-warning text-dark">PENDING_VERIFICATION</span></td>
+                    <td>Physical verification report submitted by Head Security Vikram Singh.</td>
+                    <td>
+                        <button class="btn btn-sm btn-success me-1">Approve Occupancy</button>
+                        <button class="btn btn-sm btn-outline-danger">Reject</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function appendMockLog() {
+            const logBox = document.getElementById('log-output');
+            const now = new Date().toISOString();
+            logBox.innerHTML += `<br>[INFO] ${now} - GET /api/communities/comm-bhooja 200 OK (2ms)`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // Initial Load
+        refreshData();
+        renderMockFallbackData();
+    </script>
+</body>
+</html>

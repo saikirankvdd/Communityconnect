@@ -1,0 +1,6 @@
+{
+  "name": "CommunityConnect",
+  "description": "Multi-tenant residential community management platform featuring zero-trust auth, platform governance, community admin verification, and resident group demand portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
