@@ -248,7 +248,7 @@ export const authApi = {
       flatNumber: formData.flatNumber,
       residentType: formData.residentType || 'Owner',
       accessLevel: formData.hasConflict ? 'TEMPORARY' : 'PERMANENT',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       familyCount: 1
     };
 
@@ -301,7 +301,7 @@ export const authApi = {
         communityId: invitation.communityId,
         communityName: invitation.communityName,
         phone: invitation.recipientMobile,
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+        avatar: null,
         title: 'Management Committee President'
       };
       users.push(adminUser);

@@ -137,7 +137,7 @@ export const PRECONFIGURED_USERS = [
     loginId: 'admin@communityconnect.com',
     password: 'password123',
     role: 'PLATFORM_ADMIN',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     title: 'Chief Operations Officer (CommunityConnect HQ)',
     phone: '+91 99000 11223'
   },
@@ -150,7 +150,7 @@ export const PRECONFIGURED_USERS = [
     role: 'COMMUNITY_ADMIN',
     communityId: 'comm-bhooja',
     communityName: 'My Home Bhooja',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     title: 'Management Committee President',
     phone: '+91 98490 12345'
   },
@@ -163,7 +163,7 @@ export const PRECONFIGURED_USERS = [
     role: 'COMMUNITY_ADMIN',
     communityId: 'comm-saket',
     communityName: 'Saket Towers',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     title: 'Resident Welfare Association General Secretary',
     phone: '+91 98480 99881'
   },
@@ -180,7 +180,7 @@ export const PRECONFIGURED_USERS = [
     tower: 'Tower A',
     residentType: 'Owner',
     accessLevel: 'PERMANENT', // Can switch to TEMPORARY during verification demo
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98765 43210',
     familyCount: 3,
     vehicleFastag: 'TS 09 FH 8120'
@@ -199,7 +199,7 @@ export const PRECONFIGURED_USERS = [
     rating: 4.88,
     reviewsCount: 342,
     communitiesServed: ['comm-bhooja', 'comm-saket', 'comm-prestige', 'comm-aparna'],
-    avatar: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98888 77665',
     verified: true,
     badges: ['ISO Certified', 'Police Verified Techs', 'Group Demand Partner']
@@ -218,7 +218,7 @@ export const PRECONFIGURED_USERS = [
     rating: 4.91,
     reviewsCount: 280,
     communitiesServed: ['comm-bhooja', 'comm-saket', 'comm-prestige'],
-    avatar: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98777 44332',
     verified: true,
     badges: ['Licensed Wiremen', '24x7 Emergency Line', 'Group Demand Partner']
@@ -237,7 +237,7 @@ export const PRECONFIGURED_USERS = [
     rating: 4.86,
     reviewsCount: 215,
     communitiesServed: ['comm-bhooja', 'comm-aparna'],
-    avatar: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98666 55443',
     verified: true,
     badges: ['Ultrasonic Leak Detection', '30-Day Guarantee', 'Group Demand Partner']
@@ -256,7 +256,7 @@ export const PRECONFIGURED_USERS = [
     rating: 4.92,
     reviewsCount: 58,
     communitiesServed: ['comm-bhooja'],
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98123 45678',
     verified: true,
     badges: ['Aadhaar Verified', 'Gate Biometric Pass', '1-on-1 Dedicated Staff'],
@@ -303,7 +303,7 @@ export const PRECONFIGURED_USERS = [
     rating: 4.88,
     reviewsCount: 64,
     communitiesServed: ['comm-bhooja'],
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98222 33445',
     verified: true,
     badges: ['Police Cleared', 'Biometric Access Active', '1-on-1 Dedicated Staff'],
@@ -337,7 +337,7 @@ export const PRECONFIGURED_USERS = [
     rating: 4.89,
     reviewsCount: 42,
     communitiesServed: ['comm-bhooja'],
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98765 11223',
     verified: true,
     badges: ['Commercial DL', 'Zero Accident Record', 'Gate Pass Active'],
@@ -368,7 +368,7 @@ export const PRECONFIGURED_USERS = [
     communityName: 'My Home Bhooja',
     badgeId: 'SEC-BHOOJA-4892',
     gateAssignment: 'Gate 1 North (Main Ingress)',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
+    avatar: null,
     phone: '+91 98490 55001',
     shift: 'Shift A (06:00 - 14:00)'
   }
