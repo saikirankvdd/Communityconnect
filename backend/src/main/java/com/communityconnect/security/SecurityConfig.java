@@ -73,7 +73,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/api/auth/**").permitAll()
+                auth.requestMatchers("/", "/health", "/api/health").permitAll()
+                    .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/communities/public", "/api/communities/public/**").permitAll()
                     .requestMatchers("/api/services/public", "/api/services/public/**", "/api/services/catalog").permitAll();
 
