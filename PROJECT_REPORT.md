@@ -64,28 +64,28 @@ To ensure maintainability, security, and scalability, the backend is partitioned
 ### A. Run Application Services
 ```bash
 # 1. Start React Frontend (Port 3000)
-cd /home/saikiran/Documents/communityconnect
+cd Communityconnect
 npm run dev
 
 # 2. Start Spring Boot Backend Server (Port 8080)
-cd /home/saikiran/Documents/communityconnect/backend
+cd Communityconnect/backend
 mvn spring-boot:run
 ```
 
 ### B. Operations & Visualizer Applications
 ```bash
 # Launch Native Laptop Desktop GUI App Window
-cd /home/saikiran/Documents/communityconnect
+cd Communityconnect
 ./launch-visualizer.sh
 
 # Launch ANSI Terminal Console Visualizer
-cd /home/saikiran/Documents/communityconnect
+cd Communityconnect
 ./launch-terminal-console.sh
 ```
 
 ### C. Automated Integration Tests
 ```bash
-cd /home/saikiran/Documents/communityconnect/backend
+cd Communityconnect/backend
 mvn test
 ```
 

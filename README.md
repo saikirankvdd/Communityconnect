@@ -101,7 +101,8 @@ CommunityConnect follows a **Decoupled 3-Tier Layered Architecture**:
 ### Step 1: Clone or Navigate to the Workspace
 
 ```bash
-cd /home/saikiran/Documents/communityconnect
+git clone https://github.com/saikirankvdd/Communityconnect.git
+cd Communityconnect
 ```
 
 ### Step 2: Install Frontend Dependencies
@@ -125,7 +126,7 @@ cd ..
 ### Step 1: Run the React Frontend
 
 ```bash
-cd /home/saikiran/Documents/communityconnect
+# From the project root
 npm run dev
 ```
 > Access the React web interface at **`http://localhost:3000`**.
@@ -137,7 +138,7 @@ npm run dev
 In a new terminal window:
 
 ```bash
-cd /home/saikiran/Documents/communityconnect/backend
+cd backend
 mvn spring-boot:run
 ```
 > Starts the REST API server at **`http://localhost:8080`**. Flyway automatically migrates database schemas on boot.
@@ -149,7 +150,7 @@ mvn spring-boot:run
 To execute the 5 PostgreSQL / JUnit 5 integration scenarios:
 
 ```bash
-cd /home/saikiran/Documents/communityconnect/backend
+cd backend
 mvn test
 ```
 > **Output**: `Tests run: 5, Failures: 0, Errors: 0` (`BUILD SUCCESS`).
@@ -163,7 +164,7 @@ mvn test
 Launch a standalone native desktop app window on your laptop screen:
 
 ```bash
-cd /home/saikiran/Documents/communityconnect
+# From the project root
 ./launch-visualizer.sh
 ```
 
@@ -176,7 +177,7 @@ cd /home/saikiran/Documents/communityconnect
 Render ANSI-colored, formatted ASCII tables directly inside your terminal window:
 
 ```bash
-cd /home/saikiran/Documents/communityconnect
+# From the project root
 ./launch-terminal-console.sh
 ```
 
