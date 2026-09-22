@@ -8,19 +8,15 @@ spring:
     name: communityconnect-backend
 
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:communityconnect;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:}
-    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    url: ${SPRING_DATASOURCE_URL:${DB_URL:jdbc:h2:mem:communityconnect;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:sa}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:${DB_DRIVER:}}
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: ${JPA_DIALECT:org.hibernate.dialect.H2Dialect}
 
   flyway:
     enabled: true
