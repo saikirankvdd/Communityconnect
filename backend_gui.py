@@ -6,6 +6,7 @@ Enforces High-Contrast Emerald Dark Theme (Compatible with system Light & Dark O
 
 import tkinter as tk
 from tkinter import ttk, messagebox
+import os
 import urllib.request
 import json
 import threading
@@ -15,7 +16,8 @@ class CommunityConnectDesktopGUI(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("CommunityConnect - Native Backend Visualizer Console")
+        self.backend_url = os.environ.get("BACKEND_URL", "http://localhost:8080").rstrip("/")
+        self.title(f"CommunityConnect - Native Backend Visualizer ({self.backend_url})")
         self.geometry("1260x820")
         self.configure(bg="#0b1329")
 
@@ -323,7 +325,7 @@ class CommunityConnectDesktopGUI(tk.Tk):
         comm_id = item['values'][0]
 
         try:
-            req = urllib.request.Request(f"http://localhost:8080/api/communities/{comm_id}/subscription", data=json.dumps({"status": new_status}).encode('utf-8'), headers={'Content-Type': 'application/json'}, method='PATCH')
+            req = urllib.request.Request(f"{self.backend_url}/api/communities/{comm_id}/subscription", data=json.dumps({"status": new_status}).encode('utf-8'), headers={'Content-Type': 'application/json'}, method='PATCH')
             urllib.request.urlopen(req)
         except Exception:
             pass
