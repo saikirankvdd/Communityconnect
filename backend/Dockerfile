@@ -2,6 +2,8 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
+ENV MAVEN_OPTS="-Xmx384m"
+
 # Copy Maven POM and source code
 COPY pom.xml .
 COPY src ./src
@@ -16,4 +18,4 @@ COPY --from=build /app/target/*.jar app.jar
 
 ENV PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx384m", "-jar", "app.jar"]
