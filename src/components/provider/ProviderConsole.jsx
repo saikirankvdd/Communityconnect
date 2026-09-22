@@ -731,12 +731,8 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
           {/* User Profile & Logout */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2.5 pl-3 border-l border-[#eaedff]">
-              <div className="w-8 h-8 rounded-full bg-[#006591] text-white flex items-center justify-center text-xs font-bold shadow-xs overflow-hidden">
-                {currentUser?.avatar ? (
-                  <img src={currentUser.avatar} alt={providerName} className="w-full h-full object-cover" />
-                ) : (
-                  <span>{providerName.slice(0, 2).toUpperCase()}</span>
-                )}
+              <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs uppercase">
+                {providerName ? providerName.charAt(0) : 'P'}
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-xs font-bold text-[#131b2e] leading-tight">

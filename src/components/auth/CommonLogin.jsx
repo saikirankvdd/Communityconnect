@@ -328,11 +328,9 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
                   className="w-full text-left p-2 sm:p-2.5 rounded-xl bg-gray-50/80 hover:bg-emerald-50/60 border border-gray-200/80 hover:border-emerald-300 transition flex items-center justify-between gap-2.5 cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={m.avatar}
-                      alt={m.name}
-                      className="w-7 h-7 rounded-lg object-cover shrink-0 ring-1 ring-gray-200"
-                    />
+                    <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs uppercase">
+                      {m.name.charAt(0)}
+                    </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs font-bold text-gray-900 group-hover:text-[#16A34A] transition truncate">

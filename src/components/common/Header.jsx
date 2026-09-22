@@ -94,11 +94,9 @@ export const Header = ({
                     </div>
                   </div>
 
-                  <img
-                    src={currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'}
-                    alt={currentUser.name}
-                    className="w-8 h-8 rounded-full object-cover ring-1 ring-emerald-500/30"
-                  />
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-2 ring-emerald-500/20 shadow-xs uppercase">
+                    {currentUser.name ? currentUser.name.charAt(0) : 'U'}
+                  </div>
                   <ChevronDown className="w-3.5 h-3.5 text-gray-400 mr-1" />
                 </div>
 
