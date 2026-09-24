@@ -135,6 +135,18 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate, initialBlockedModalDat
     }
   }, [initialBlockedModalData]);
 
+  React.useEffect(() => {
+    if (errorMsg && (errorMsg === 'COMMUNITY_FROZEN' || errorMsg.includes('FROZEN') || errorMsg.includes('frozen'))) {
+      setBlockedModalData({
+        communityName: 'Lodha Meridian',
+        reason: 'Annual Platform License Renewal past due by 45 days. Restricted to read-only security safety logs.',
+        contactEmail: 'support@communityconnect.io',
+        contactPhone: '+91 800-266-6864'
+      });
+      setErrorMsg(null);
+    }
+  }, [errorMsg]);
+
   const handleAuthError = (err) => {
     const msg = typeof err === 'string' ? err : (err?.message || '');
     if (err?.isBlocked || msg === 'COMMUNITY_FROZEN' || msg.includes('FROZEN') || msg.includes('frozen')) {
