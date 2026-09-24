@@ -76,6 +76,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
     return currentUser?.communityId ? communityApi.getCommunityById(currentUser.communityId) : null;
   });
   const isCommunityFrozen = currentCommunity && currentCommunity.status === 'FROZEN';
+  const [showFrozenModal, setShowFrozenModal] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('info');
 
@@ -695,28 +696,117 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
 
   return (
     <div className={`bg-[#FAF8FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#131B2E] antialiased min-h-screen ${isCommunityFrozen ? 'pt-14' : ''}`}>
-      {/* Community Frozen Lockout Top Banner */}
+      {/* Community Frozen Lockout Top Banner & Pop-up Modal */}
       {isCommunityFrozen && (
-        <div className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-rose-700 via-rose-800 to-amber-800 text-white px-5 py-3 shadow-2xl flex items-center justify-between border-b-2 border-rose-300">
-          <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
-            <div className="p-2 bg-white/10 rounded-xl border border-white/20 shrink-0">
-              <span className="material-symbols-outlined text-2xl text-amber-300 animate-pulse">lock</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="bg-rose-950/80 text-rose-200 font-black text-[10px] uppercase px-2 py-0.5 rounded border border-rose-400/40">
-                  🔒 SUBSCRIPTION FROZEN / ACCESS BLOCKED
-                </span>
-                <span className="font-extrabold text-sm text-white">
-                  {currentCommunity?.name || 'Community Portal'} Services Suspended
-                </span>
+        <>
+          <div className="fixed top-0 left-0 right-0 z-[99998] bg-gradient-to-r from-rose-700 via-rose-800 to-amber-800 text-white px-5 py-2.5 shadow-2xl flex items-center justify-between border-b-2 border-rose-300">
+            <div className="flex items-center justify-between max-w-7xl mx-auto w-full gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-white/10 rounded-xl border border-white/20 shrink-0">
+                  <span className="material-symbols-outlined text-xl text-amber-300 animate-pulse">lock</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  <span className="bg-rose-950/80 text-rose-200 font-black text-[10px] uppercase px-2 py-0.5 rounded border border-rose-400/40">
+                    🔒 SUBSCRIPTION FROZEN
+                  </span>
+                  <span className="font-extrabold text-white">
+                    {currentCommunity?.name || 'Community Portal'} Services Suspended
+                  </span>
+                </div>
               </div>
-              <p className="text-xs text-rose-100 mt-0.5">
-                Notice: <em>"{currentCommunity?.freezeReason || 'Annual SaaS License Renewal Past Due'}"</em>. Read-only safety logs active. Contact <strong>support@communityconnect.io</strong> / <strong>+91 800-266-6864</strong> to unfreeze live portal access.
-              </p>
+              <button
+                type="button"
+                onClick={() => setShowFrozenModal(true)}
+                className="px-3 py-1 bg-white text-rose-900 rounded-lg text-xs font-bold hover:bg-rose-50 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-xs"
+              >
+                <span className="material-symbols-outlined text-sm">info</span>
+                <span>View Lock Details &amp; Unfreeze</span>
+              </button>
             </div>
           </div>
-        </div>
+
+          {/* Subscription Frozen Modal Pop-up */}
+          {showFrozenModal && (
+            <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-[999999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-rose-500/40 flex flex-col gap-4 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-36 h-36 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div className="flex items-start justify-between border-b border-rose-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shrink-0">
+                      <span className="material-symbols-outlined text-2xl animate-pulse">lock</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-rose-100 text-rose-900 font-black text-[10px] uppercase px-2 py-0.5 rounded-md border border-rose-300">
+                          🔒 LICENSE SUSPENDED
+                        </span>
+                      </div>
+                      <h2 className="text-lg font-bold text-slate-900 mt-0.5">
+                        {currentCommunity?.name || 'Community'} Services Frozen
+                      </h2>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFrozenModal(false)}
+                    className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-xl">close</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-rose-50/80 border border-rose-200 text-xs text-rose-950 leading-relaxed">
+                    <strong className="block font-bold text-rose-900 mb-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-base">warning</span>
+                      <span>Suspension Notice:</span>
+                    </strong>
+                    <em>"{currentCommunity?.freezeReason || 'Annual Platform License Renewal past due by 45 days. Restricted to read-only security safety logs.'}"</em>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                    <span className="font-bold text-slate-800 block">Current Restricted Status:</span>
+                    <ul className="space-y-1 text-slate-600 list-disc pl-4 text-[11px]">
+                      <li>Live amenity bookings &amp; maintenance payments locked.</li>
+                      <li>Gate security ANPR logs running in read-only audit mode.</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs space-y-1">
+                    <span className="font-bold text-emerald-950 block">HQ Support &amp; Unfreeze Helpline:</span>
+                    <p className="text-emerald-900 text-[11px]">
+                      Email: <strong>support@communityconnect.io</strong> | Mobile: <strong>+91 800-266-6864</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFrozenModal(false);
+                      showToast('Read-only safety access active.', 'info');
+                    }}
+                    className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer transition"
+                  >
+                    Continue Read-Only
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.href = 'mailto:support@communityconnect.io?subject=Unfreeze%20Community%20License%20Request';
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-sm cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-base">mail</span>
+                    <span>Contact Support to Unfreeze</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
       {/* Toast Notification Container */}
       {toastMessage && (

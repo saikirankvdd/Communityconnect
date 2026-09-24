@@ -61,29 +61,6 @@ export const ChatMessengerModal = ({ isOpen, onClose, targetUser = null }) => {
 
     setMessages(prev => [...prev, newMsg]);
     setInputVal('');
-
-    // Simulate auto reply from seller/cell
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      let replyText = "Sure Arjun! That works perfectly. I am home at Flat C-502 this evening after 5:30 PM. Feel free to come over and test ride it in the corridor!";
-      if (text.toLowerCase().includes('price') || text.toLowerCase().includes('negotiable')) {
-        replyText = "I can do ₹2,500 for a fellow neighbor if you can pick it up today!";
-      } else if (text.toLowerCase().includes('time') || text.toLowerCase().includes('when') || text.toLowerCase().includes('today')) {
-        replyText = "Today evening between 5:30 PM and 8:00 PM is great. You can ring the doorbell at C-502!";
-      }
-
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'other',
-          name: activeUser.name,
-          text: replyText,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-    }, 900);
   };
 
   if (!isOpen) return null;
