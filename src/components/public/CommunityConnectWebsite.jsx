@@ -73,6 +73,19 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
+  const [blockedModalData, setBlockedModalData] = useState(null);
+
+  React.useEffect(() => {
+    if (loginError && (loginError === 'COMMUNITY_FROZEN' || loginError.includes('FROZEN') || loginError.includes('frozen'))) {
+      setBlockedModalData({
+        communityName: 'Lodha Meridian',
+        reason: 'Annual Platform License Renewal past due by 45 days. Restricted to read-only security safety logs.',
+        contactEmail: 'support@communityconnect.io',
+        contactPhone: '+91 800-266-6864'
+      });
+      setLoginError(null);
+    }
+  }, [loginError]);
 
   // Preconfigured Member Personas (8 Roles)
   const QUICK_PRECONFIGURED_MEMBERS = [
@@ -182,6 +195,21 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
     }
   ];
 
+  const handleAuthError = (err) => {
+    const msg = typeof err === 'string' ? err : (err?.message || '');
+    if (err?.isBlocked || msg === 'COMMUNITY_FROZEN' || msg.includes('FROZEN') || msg.includes('frozen')) {
+      setBlockedModalData({
+        communityName: err?.communityName || 'Lodha Meridian',
+        reason: err?.freezeReason || 'Annual Platform License Renewal past due by 45 days. Restricted to read-only security safety logs.',
+        contactEmail: err?.contactEmail || 'support@communityconnect.io',
+        contactPhone: err?.contactPhone || '+91 800-266-6864'
+      });
+      setLoginError(null);
+    } else {
+      setLoginError(msg || 'Authentication failed. Please check credentials.');
+    }
+  };
+
   // Quick 1-Click Login for the 5 Members
   const handleQuickLogin = async (email, password = 'password123') => {
     setLoginLoading(true);
@@ -191,68 +219,9 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       setShowLoginModal(false);
       onLoginSuccess(response.user);
     } catch (err) {
-      setLoginError(err.message || 'Authentication failed.');
+      handleAuthError(err);
     } finally {
       setLoginLoading(false);
-    }
-  };
-
-  // Invitation Activation State
-  const [showActivateModal, setShowActivateModal] = useState(false);
-  const [inviteTokenInput, setInviteTokenInput] = useState('');
-  const [newPasswordInput, setNewPasswordInput] = useState('');
-  const [activateLoading, setActivateLoading] = useState(false);
-  const [activateError, setActivateError] = useState(null);
-  const [activateSuccess, setActivateSuccess] = useState(false);
-
-  // Unique HTML IDs
-  const citySelectId = useId();
-  const localityInputId = useId();
-  const commNameInputId = useId();
-  const commTypeSelectId = useId();
-  const unitsSliderId = useId();
-  const gatesInputId = useId();
-  const presNameId = useId();
-  const presEmailId = useId();
-  const presPhoneId = useId();
-  const paymentMethodId = useId();
-  const contractCheckboxId = useId();
-  const loginIdField = useId();
-  const loginPassField = useId();
-  const inviteTokenId = useId();
-  const newPassId = useId();
-
-  // Price computation logic
-  const isEnterprise = selectedTier === 'ENTERPRISE_PREMIUM';
-  const baseMonthlyPrice = isEnterprise ? 65000 : 35000;
-  const discountMultiplier = billingCycle === 'ANNUAL' ? 0.85 : 1.0;
-  const effectiveMonthlyFee = Math.round(baseMonthlyPrice * discountMultiplier);
-  const effectivePerUnitMonthly = Math.round(effectiveMonthlyFee / Math.max(unitsCount, 1));
-  const annualTotal = effectiveMonthlyFee * 12;
-
-  // City presets
-  const cityPresets = {
-    Hyderabad: ['Financial District', 'Gachibowli', 'Madhapur', 'Tellapur', 'Kokapet', 'Jubilee Hills'],
-    Bengaluru: ['Whitefield', 'Bellandur', 'Sarjapur Road', 'Electronic City', 'Indiranagar', 'Hebbal'],
-    Mumbai: ['Powai', 'BKC Corridor', 'Thane West', 'Andheri East', 'Lower Parel', 'Malad'],
-    'Delhi-NCR': ['Gurugram Golf Course Rd', 'Cyber City', 'Noida Sector 150', 'Greater Noida West', 'Dwarka'],
-    Pune: ['Hinjawadi IT Park', 'Kharadi', 'Baner', 'Wakad', 'Viman Nagar'],
-    Chennai: ['OMR IT Corridor', 'ECR', 'Velachery', 'Anna Nagar', 'Perungudi']
-  };
-
-  // Scroll to onboarding engine
-  const scrollToConnect = () => {
-    const el = document.getElementById('connect-onboarding-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  // Scroll to 5 Ws
-  const scrollToAbout = () => {
-    const el = document.getElementById('five-ws-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -271,7 +240,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       setShowLoginModal(false);
       onLoginSuccess(response.user);
     } catch (err) {
-      setLoginError(err.message || 'Authentication failed. Please check credentials.');
+      handleAuthError(err);
     } finally {
       setLoginLoading(false);
     }
@@ -1843,6 +1812,65 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                 )}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Account Blocked / Frozen Community Modal Pop-up */}
+      {blockedModalData && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-rose-300 flex flex-col gap-5 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-rose-100 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="p-3.5 bg-rose-100 text-rose-700 rounded-2xl border border-rose-300 shrink-0 shadow-sm">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase tracking-wide mb-1.5 shadow-xs">
+                  🔒 Subscription Frozen / Access Suspended
+                </div>
+                <h3 className="text-xl font-extrabold text-slate-900">Community Access Blocked</h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Portal access for <span className="font-bold text-slate-900">{blockedModalData.communityName}</span> has been frozen by Platform HQ Operations.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/70 rounded-2xl p-4 border border-rose-200/90 flex flex-col gap-1.5 relative z-10">
+              <span className="text-[10px] font-extrabold text-rose-700 uppercase tracking-wider">Freeze Reason / Notice</span>
+              <p className="text-xs text-slate-800 font-medium leading-relaxed italic">
+                "{blockedModalData.reason}"
+              </p>
+            </div>
+
+            <div className="bg-amber-50/90 rounded-2xl p-4 border border-amber-200 text-xs text-amber-950 flex flex-col gap-2 relative z-10">
+              <span className="font-extrabold text-amber-950 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-700" />
+                How to Restore Service / Contact Admin:
+              </span>
+              <p className="text-[11px] text-amber-900 leading-normal">
+                Please contact Platform HQ Super-Admin or Finance Office to unfreeze society access and restore live portal services:
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-2 border-t border-amber-200/80 font-bold text-xs">
+                <a href={`mailto:${blockedModalData.contactEmail}`} className="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-[#006b2c] rounded-xl border border-emerald-300 transition flex items-center gap-1.5 cursor-pointer">
+                  📧 <span>{blockedModalData.contactEmail}</span>
+                </a>
+                <a href={`tel:${blockedModalData.contactPhone}`} className="px-3 py-1.5 bg-sky-100 hover:bg-sky-200 text-sky-800 rounded-xl border border-sky-300 transition flex items-center gap-1.5 cursor-pointer">
+                  📞 <span>{blockedModalData.contactPhone}</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100 relative z-10">
+              <button
+                type="button"
+                onClick={() => setBlockedModalData(null)}
+                className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
+                Dismiss &amp; Close Notice
+              </button>
+            </div>
           </div>
         </div>
       )}
