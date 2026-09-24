@@ -276,6 +276,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   // Domestic Staff & Maid Hiring State
   const [staffRequests, setStaffRequests] = useState(() => serviceApi.getStaffRequests(currentUser?.communityId));
   const [showCreateStaffModal, setShowCreateStaffModal] = useState(false);
+  const [approvedSuccessModalData, setApprovedSuccessModalData] = useState(null);
   const [newStaffType, setNewStaffType] = useState('Cook');
   const [newStaffTitle, setNewStaffTitle] = useState('');
   const [newStaffBudget, setNewStaffBudget] = useState('4200');
@@ -308,7 +309,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
     window.addEventListener('communityconnect_offers_updated', handleOffersSync);
     window.addEventListener('communityconnect_staff_updated', handleStaffSync);
     window.addEventListener('communityconnect_pools_updated', handlePostsSync);
-    window.addEventListener('storage', handlePostsSync);
+    window.addEventListener('storage', handleStaffSync);
 
     return () => {
       window.removeEventListener('communityconnect_posts_updated', handlePostsSync);
@@ -318,7 +319,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
       window.removeEventListener('communityconnect_offers_updated', handleOffersSync);
       window.removeEventListener('communityconnect_staff_updated', handleStaffSync);
       window.removeEventListener('communityconnect_pools_updated', handlePostsSync);
-      window.removeEventListener('storage', handlePostsSync);
+      window.removeEventListener('storage', handleStaffSync);
     };
   }, [currentUser]);
 
@@ -397,9 +398,21 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   // Accept Maid/Cook Application & Issue Gate Pass
   const handleAcceptStaffApp = (requestId, appId) => {
     const res = serviceApi.acceptStaffApplication(requestId, appId);
-    setStaffRequests(serviceApi.getStaffRequests(currentUser?.communityId));
+    const updated = serviceApi.getStaffRequests(currentUser?.communityId);
+    setStaffRequests(updated);
     setAllVisitorPasses(serviceApi.getVisitorPasses());
-    showToast(`Hired ${res.application.staffName}! Security gate entry pass auto-issued to Gate Guard.`, 'success');
+
+    // Trigger Popup Modal for Allotment Confirmation
+    setApprovedSuccessModalData({
+      staffName: res.application.staffName,
+      category: res.application.category || 'Domestic Staff',
+      monthlyPay: res.application.proposedMonthlyPay,
+      shiftTime: res.application.proposedShiftTime,
+      unit: currentUser?.unit || 'Flat A-1204',
+      gateOtp: 'Verified Pass Issued'
+    });
+
+    showToast(`Approved & Allotted ${res.application.staffName}! Security gate entry pass auto-issued.`, 'success');
   };
 
   // Quick Action / Tab Switching
@@ -1239,7 +1252,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                         </div>
                         <div>
                           <h2 className="text-base font-extrabold text-[#131b2e]">Domestic Helpers &amp; Cook/Maid Approvals</h2>
-                          <p className="text-xs text-gray-500">Cooks, maids, &amp; helpers applying via passcode for Flat A-1204</p>
+                          <p className="text-xs text-gray-500">Manage passcode applications &amp; allotted staff for {currentUser?.unit || 'Flat A-1204'}</p>
                         </div>
                       </div>
                       <button
@@ -1252,65 +1265,130 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                       </button>
                     </div>
 
-                    <div className="space-y-3">
-                      {staffRequests.map(req => (
-                        <div key={req.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] uppercase">
-                                {req.staffType || 'Cook'}
-                              </span>
-                              <span className="text-xs font-bold text-gray-900">{req.title}</span>
-                            </div>
-                            <span className="text-xs font-mono font-bold text-[#006b2c]">Budget: ₹{req.offeredBudget}/mo</span>
+                    <div className="space-y-4">
+                      {/* 1. Pending Passcode Applications List */}
+                      {staffRequests.filter(r => r.status !== 'HIRED' && (r.applications || []).some(a => a.status !== 'ACCEPTED')).length > 0 && (
+                        <div className="space-y-3">
+                          <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5 bg-amber-50 p-2 rounded-xl border border-amber-200">
+                            <span className="material-symbols-outlined text-base text-amber-600">hourglass_top</span>
+                            <span>Pending Passcode Applications (Action Required)</span>
                           </div>
 
-                          {req.applications && req.applications.length > 0 ? (
-                            <div className="space-y-2 pt-2 border-t border-gray-200">
-                              {req.applications.map(app => (
-                                <div key={app.id} className="p-3.5 rounded-xl bg-white border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                          {staffRequests
+                            .filter(r => r.status !== 'HIRED')
+                            .map(req => {
+                              const pendingApps = (req.applications || []).filter(a => a.status !== 'ACCEPTED');
+                              if (pendingApps.length === 0) return null;
+
+                              return (
+                                <div key={req.id} className="p-4 rounded-xl bg-gray-50 border border-amber-200 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] uppercase border border-amber-300">
+                                        {req.staffType || 'Cook'} Needed
+                                      </span>
+                                      <span className="text-xs font-bold text-gray-900">{req.title}</span>
+                                    </div>
+                                    <span className="text-xs font-mono font-bold text-[#006b2c]">Budget: ₹{req.offeredBudget}/mo</span>
+                                  </div>
+
+                                  <div className="space-y-2 pt-2 border-t border-gray-200">
+                                    {pendingApps.map(app => (
+                                      <div key={app.id} className="p-3.5 rounded-xl bg-white border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                        <div className="space-y-1 text-xs">
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-gray-900 text-sm">{app.staffName}</strong>
+                                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
+                                              Passcode Submitted • Allotment Pending
+                                            </span>
+                                          </div>
+                                          <div className="text-gray-600">
+                                            Category: <strong className="text-gray-800">{app.category}</strong> • Shift: <strong className="text-gray-800">{app.proposedShiftTime}</strong> • Rate: <strong className="text-[#006b2c]">₹{app.proposedMonthlyPay}/mo</strong>
+                                          </div>
+                                          <div className="text-slate-500 italic text-[11px]">
+                                            "{app.note}"
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 shrink-0">
+                                          <button
+                                            type="button"
+                                            onClick={() => showToast(`Calling applicant ${app.staffName} at ${app.phone}...`, 'info')}
+                                            className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                                          >
+                                            <span className="material-symbols-outlined text-sm">call</span>
+                                            <span>Call Applicant</span>
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleAcceptStaffApp(req.id, app.id)}
+                                            className="px-4 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                          >
+                                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                                            <span>Approve &amp; Allot Work</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      )}
+
+                      {/* 2. Active Approved & Allotted Staff List */}
+                      {staffRequests.filter(r => r.status === 'HIRED' || (r.applications || []).some(a => a.status === 'ACCEPTED')).length > 0 && (
+                        <div className="space-y-3 pt-1">
+                          <div className="text-xs font-bold text-[#005320] flex items-center gap-1.5 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+                            <span className="material-symbols-outlined text-base text-[#006b2c]">verified</span>
+                            <span>Active Approved Household Staff (Allotted)</span>
+                          </div>
+
+                          {staffRequests
+                            .filter(r => r.status === 'HIRED' || (r.applications || []).some(a => a.status === 'ACCEPTED'))
+                            .map(req => {
+                              const hiredApp = req.hiredStaff || (req.applications || []).find(a => a.status === 'ACCEPTED');
+                              if (!hiredApp) return null;
+
+                              return (
+                                <div key={req.id} className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                   <div className="space-y-1 text-xs">
                                     <div className="flex items-center gap-2">
-                                      <strong className="text-gray-900 text-sm">{app.staffName}</strong>
-                                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
-                                        Passcode Submitted • Allotment Pending
+                                      <span className="px-2 py-0.5 rounded-full bg-[#006b2c] text-white text-[10px] font-bold">
+                                        ✔ Allotted &amp; Active
                                       </span>
+                                      <strong className="text-gray-900 text-sm">{hiredApp.staffName}</strong>
+                                      <span className="text-gray-500 font-medium">({hiredApp.category || req.staffType})</span>
                                     </div>
-                                    <div className="text-gray-600">
-                                      Category: <strong className="text-gray-800">{app.category}</strong> • Shift: <strong className="text-gray-800">{app.proposedShiftTime}</strong> • Rate: <strong className="text-[#006b2c]">₹{app.proposedMonthlyPay}/mo</strong>
+                                    <div className="text-gray-700">
+                                      Shift: <strong>{hiredApp.proposedShiftTime || req.preferredTime}</strong> • Monthly Pay: <strong className="text-[#006b2c]">₹{hiredApp.proposedMonthlyPay || req.offeredBudget}/mo</strong>
                                     </div>
-                                    <div className="text-slate-500 italic text-[11px]">
-                                      "{app.note}"
+                                    <div className="text-emerald-800 text-[11px] font-medium flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-sm">badge</span>
+                                      <span>Gate Entry Pass Auto-Issued to Security Guards</span>
                                     </div>
                                   </div>
 
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button
                                       type="button"
-                                      onClick={() => showToast(`Calling applicant ${app.staffName} at ${app.phone}...`, 'info')}
-                                      className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                                      onClick={() => showToast(`Calling ${hiredApp.staffName} at ${hiredApp.phone}...`, 'info')}
+                                      className="px-3.5 py-2 bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
                                     >
                                       <span className="material-symbols-outlined text-sm">call</span>
-                                      <span>Call Applicant</span>
+                                      <span>Call Staff</span>
                                     </button>
-
-                                    <button
-                                      type="button"
-                                      onClick={() => handleAcceptStaffApp(req.id, app.id)}
-                                      className="px-4 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1 cursor-pointer"
-                                    >
-                                      <span className="material-symbols-outlined text-sm">check_circle</span>
-                                      <span>Approve &amp; Allot Work</span>
-                                    </button>
+                                    <span className="px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold border border-emerald-300">
+                                      Work Allotted ✓
+                                    </span>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-xs text-gray-500 italic">No applications submitted yet for this requirement.</div>
-                          )}
+                              );
+                            })}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
 
@@ -4023,6 +4101,72 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Allotment Approval Success Popup Modal */}
+      {approvedSuccessModalData && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-200 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#006b2c] border border-emerald-300 flex items-center justify-center font-black text-2xl shrink-0">
+                  🎉
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-900">Work Allotted &amp; Approved!</h3>
+                  <p className="text-[11px] text-emerald-800 font-semibold">Helper Status: Active Connected</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApprovedSuccessModalData(null)}
+                className="p-1 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 font-medium">Allotted Helper:</span>
+                <strong className="text-gray-900 text-sm">{approvedSuccessModalData.staffName}</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 font-medium">Role Category:</span>
+                <span className="font-bold text-gray-800">{approvedSuccessModalData.category}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 font-medium">Assigned Flat:</span>
+                <span className="font-bold text-[#006b2c]">{approvedSuccessModalData.unit}</span>
+              </div>
+              <div className="flex items-center justify-between pt-1 border-t border-emerald-200">
+                <span className="text-gray-600 font-medium">Monthly Rate:</span>
+                <strong className="text-[#006b2c] font-mono">₹{approvedSuccessModalData.monthlyPay}/mo</strong>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900 text-white space-y-1.5 text-xs">
+              <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base">verified</span>
+                <span>Security Gate Pass Activated</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                A daily entry gate pass has been automatically issued to the Gate Guard terminal for <strong>{approvedSuccessModalData.staffName}</strong>. They can now enter Gate 1/2 for their daily shift!
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => setApprovedSuccessModalData(null)}
+                className="w-full py-2.5 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-base">check</span>
+                <span>Done! View Active Staff</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
