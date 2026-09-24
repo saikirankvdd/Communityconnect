@@ -1230,6 +1230,90 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column (8 cols) */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
+                  {/* Domestic Helpers & Household Staff Approvals Card */}
+                  <div className="rounded-2xl bg-white p-6 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-amber-200 space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-bold shrink-0">
+                          <span className="material-symbols-outlined text-xl">skillet</span>
+                        </div>
+                        <div>
+                          <h2 className="text-base font-extrabold text-[#131b2e]">Domestic Helpers &amp; Cook/Maid Approvals</h2>
+                          <p className="text-xs text-gray-500">Cooks, maids, &amp; helpers applying via passcode for Flat A-1204</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateStaffModal(true)}
+                        className="px-3.5 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-base">add</span>
+                        <span>+ Post Helper Requirement</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {staffRequests.map(req => (
+                        <div key={req.id} className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] uppercase">
+                                {req.staffType || 'Cook'}
+                              </span>
+                              <span className="text-xs font-bold text-gray-900">{req.title}</span>
+                            </div>
+                            <span className="text-xs font-mono font-bold text-[#006b2c]">Budget: ₹{req.offeredBudget}/mo</span>
+                          </div>
+
+                          {req.applications && req.applications.length > 0 ? (
+                            <div className="space-y-2 pt-2 border-t border-gray-200">
+                              {req.applications.map(app => (
+                                <div key={app.id} className="p-3.5 rounded-xl bg-white border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                  <div className="space-y-1 text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <strong className="text-gray-900 text-sm">{app.staffName}</strong>
+                                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
+                                        Passcode Submitted • Allotment Pending
+                                      </span>
+                                    </div>
+                                    <div className="text-gray-600">
+                                      Category: <strong className="text-gray-800">{app.category}</strong> • Shift: <strong className="text-gray-800">{app.proposedShiftTime}</strong> • Rate: <strong className="text-[#006b2c]">₹{app.proposedMonthlyPay}/mo</strong>
+                                    </div>
+                                    <div className="text-slate-500 italic text-[11px]">
+                                      "{app.note}"
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => showToast(`Calling applicant ${app.staffName} at ${app.phone}...`, 'info')}
+                                      className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">call</span>
+                                      <span>Call Applicant</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAcceptStaffApp(req.id, app.id)}
+                                      className="px-4 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                                      <span>Approve &amp; Allot Work</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-500 italic">No applications submitted yet for this requirement.</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Group Buying Pool Banner */}
                   <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7ffc97]/50 via-white to-white p-5 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-[#eaedff] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">

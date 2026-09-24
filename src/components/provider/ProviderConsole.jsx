@@ -97,6 +97,12 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
   const [selectedSettlementForNudge, setSelectedSettlementForNudge] = useState(null);
   const [selectedReqForHire, setSelectedReqForHire] = useState(null);
 
+  // Application Sent Popup & Passcode Entry States
+  const [applicationSentModalData, setApplicationSentModalData] = useState(null);
+  const [showPasscodeSubmitModal, setShowPasscodeSubmitModal] = useState(false);
+  const [enterFlatCodeInput, setEnterFlatCodeInput] = useState('');
+  const [enterFlatNumberInput, setEnterFlatNumberInput] = useState('Flat A-1204');
+
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('info');
 
@@ -126,6 +132,10 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
   const handleToggleCheckIn = (flatId) => {
     setAssignedFlats(prev => prev.map(f => {
       if (f.id === flatId) {
+        if (f.status === 'PENDING_OWNER_APPROVAL') {
+          showToast('Allotment pending! Flat owner must review & approve your application before shift check-in.', 'warning');
+          return f;
+        }
         const nextState = !f.checkedInToday;
         if (nextState) {
           showToast(`Shift Check-In recorded for ${f.flatNumber} (${f.residentName})! Security gate entry code ${f.gateOtp} verified.`, 'success');
@@ -149,6 +159,7 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
 
     setIsSubmittingHireAccept(true);
     setTimeout(() => {
+      const generatedPasscode = String(Math.floor(1000 + Math.random() * 9000));
       const newFlat = {
         id: `FLAT-HIRE-${Date.now()}`,
         flatNumber: selectedReqForHire.unit || 'Flat A-802',
@@ -159,10 +170,10 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
         shiftTime: shiftTimingInput,
         serviceType: selectedReqForHire.title || `${userTradeCategory} Service`,
         monthlyPay: Number(monthlyRateInput) || 4500,
-        gateOtp: String(Math.floor(1000 + Math.random() * 9000)),
-        status: 'ACTIVE_CONNECTED',
+        gateOtp: generatedPasscode,
+        status: 'PENDING_OWNER_APPROVAL',
         checkedInToday: false,
-        lastCheckIn: 'Newly Connected Today'
+        lastCheckIn: 'Awaiting Owner Contact & Approval'
       };
 
       setAssignedFlats(prev => [newFlat, ...prev]);
@@ -170,15 +181,65 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
       // Update request status in serviceApi
       setRequests(prev => prev.map(r => {
         if (r.id === selectedReqForHire.id) {
-          return { ...r, status: 'ACCEPTED_CONNECTED' };
+          return { ...r, status: 'PENDING_RESIDENT_REVIEW' };
         }
         return r;
       }));
 
       setIsSubmittingHireAccept(false);
-      showToast(`Hiring Accepted! ${selectedReqForHire.residentName} (${selectedReqForHire.unit}) added to your assigned shift roster at ₹${monthlyRateInput}/mo.`, 'success');
+      
+      // Trigger Popup Modal for Application Sent
+      setApplicationSentModalData({
+        residentName: selectedReqForHire.residentName || 'Resident Client',
+        unit: selectedReqForHire.unit || 'Flat A-802',
+        phone: selectedReqForHire.phone || '+91 98765 00000',
+        serviceType: selectedReqForHire.title || `${userTradeCategory} Service`,
+        passcode: generatedPasscode,
+        monthlyPay: Number(monthlyRateInput) || 4500,
+        shiftTime: shiftTimingInput
+      });
+
+      showToast(`Application sent to ${selectedReqForHire.residentName}! Awaiting owner approval.`, 'info');
       setSelectedReqForHire(null);
     }, 500);
+  };
+
+  // Handle Manual Flat Passcode / Application Code Submission
+  const handleSubmitFlatPasscode = (e) => {
+    e.preventDefault();
+    if (!enterFlatCodeInput) return;
+
+    const newFlat = {
+      id: `FLAT-PASSCODE-${Date.now()}`,
+      flatNumber: enterFlatNumberInput || 'Flat A-1204',
+      tower: (enterFlatNumberInput || 'Tower A').split(' ')[0],
+      communityName: 'My Home Bhooja',
+      residentName: 'Arjun Kumar',
+      phone: '+91 98765 43210',
+      shiftTime: '07:30 AM - 09:30 AM (Morning)',
+      serviceType: `${userTradeCategory || 'Domestic Staff'} Service`,
+      monthlyPay: 4500,
+      gateOtp: enterFlatCodeInput,
+      status: 'PENDING_OWNER_APPROVAL',
+      checkedInToday: false,
+      lastCheckIn: 'Awaiting Owner Approval & Contact'
+    };
+
+    setAssignedFlats(prev => [newFlat, ...prev]);
+    setShowPasscodeSubmitModal(false);
+
+    setApplicationSentModalData({
+      residentName: 'Arjun Kumar',
+      unit: enterFlatNumberInput || 'Flat A-1204',
+      phone: '+91 98765 43210',
+      serviceType: `${userTradeCategory || 'Domestic Staff'} Service`,
+      passcode: enterFlatCodeInput,
+      monthlyPay: 4500,
+      shiftTime: '07:30 AM - 09:30 AM (Morning)'
+    });
+
+    setEnterFlatCodeInput('');
+    showToast(`Passcode #${enterFlatCodeInput} submitted! Application sent to flat owner.`, 'info');
   };
 
   // Direct Quote Form State
@@ -813,7 +874,7 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
 
               {/* Roster of Assigned Households */}
               <div className="bg-white rounded-2xl border border-[#eaedff] shadow-xs p-6 space-y-5">
-                <div className="flex items-center justify-between pb-3 border-b border-[#eaedff]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaedff]">
                   <div>
                     <h2 className="text-lg font-bold text-[#131b2e] flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#006b2c] text-xl">home_work</span>
@@ -821,14 +882,28 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                     </h2>
                     <p className="text-xs text-[#6e7b6c]">1-on-1 resident assignments, shift times, monthly pay, and security gate entry pass codes.</p>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300">
-                    {assignedFlats.length} Active Shifts
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowPasscodeSubmitModal(true)}
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">key</span>
+                      <span>Submit Flat Passcode</span>
+                    </button>
+                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300">
+                      {assignedFlats.length} Connected / Pending
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {assignedFlats.map((flat) => (
-                    <div key={flat.id} className="p-5 rounded-2xl border border-[#eaedff] bg-[#f2f3ff]/50 flex flex-col justify-between gap-4">
+                    <div key={flat.id} className={`p-5 rounded-2xl border flex flex-col justify-between gap-4 transition ${
+                      flat.status === 'PENDING_OWNER_APPROVAL'
+                        ? 'border-amber-200 bg-amber-50/40'
+                        : 'border-[#eaedff] bg-[#f2f3ff]/50'
+                    }`}>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -837,13 +912,20 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                             </span>
                             <span className="text-xs font-bold text-[#6e7b6c]">{flat.tower}</span>
                           </div>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            flat.checkedInToday
-                              ? 'bg-[#7ffc97]/30 text-[#005320] border border-[#006b2c]/20'
-                              : 'bg-amber-100 text-amber-900 border border-amber-300'
-                          }`}>
-                            {flat.checkedInToday ? '✔ Checked-In Today' : 'Shift Pending Today'}
-                          </span>
+                          {flat.status === 'PENDING_OWNER_APPROVAL' ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                              <span>Application Sent • Pending Owner Approval</span>
+                            </span>
+                          ) : (
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              flat.checkedInToday
+                                ? 'bg-[#7ffc97]/30 text-[#005320] border border-[#006b2c]/20'
+                                : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            }`}>
+                              {flat.checkedInToday ? '✔ Checked-In Today' : 'Shift Active'}
+                            </span>
+                          )}
                         </div>
 
                         <div>
@@ -864,42 +946,67 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                             <strong className="text-[#006b2c] font-mono text-sm">₹{flat.monthlyPay.toLocaleString()} / mo</strong>
                           </div>
                           <div className="flex items-center justify-between pt-1 border-t border-[#eaedff]">
-                            <span className="text-[#6e7b6c] font-semibold">Gate Entry OTP:</span>
-                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-[#006b2c] font-mono font-black border border-emerald-200 text-xs">
-                              OTP: {flat.gateOtp}
-                            </span>
+                            <span className="text-[#6e7b6c] font-semibold">Gate Entry Passcode:</span>
+                            {flat.status === 'PENDING_OWNER_APPROVAL' ? (
+                              <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-mono font-bold border border-amber-300 text-[11px]">
+                                Passcode: #{flat.gateOtp} (Pending Allotment)
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded bg-emerald-50 text-[#006b2c] font-mono font-black border border-emerald-200 text-xs">
+                                OTP: {flat.gateOtp}
+                              </span>
+                            )}
                           </div>
                         </div>
 
                         <div className="text-[11px] text-[#6e7b6c] font-mono">
-                          Last Security Gate Access: {flat.lastCheckIn}
+                          Status: {flat.lastCheckIn}
                         </div>
                       </div>
 
                       <div className="pt-3 border-t border-[#eaedff] flex items-center justify-between gap-2">
                         <button
                           type="button"
-                          onClick={() => showToast(`Calling resident ${flat.residentName} at ${flat.phone}...`, 'info')}
+                          onClick={() => showToast(`Calling resident owner ${flat.residentName} at ${flat.phone}...`, 'info')}
                           className="px-3.5 py-2 rounded-xl bg-[#f2f3ff] hover:bg-gray-200 text-[#3e4a3d] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">call</span>
-                          <span>Call Resident</span>
+                          <span>Call Owner</span>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleToggleCheckIn(flat.id)}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
-                            flat.checkedInToday
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200'
-                              : 'bg-[#006b2c] text-white hover:bg-[#00873a]'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-sm">
-                            {flat.checkedInToday ? 'check_circle' : 'fingerprint'}
-                          </span>
-                          <span>{flat.checkedInToday ? 'Mark Shift Completed' : 'Check-In Today Shift'}</span>
-                        </button>
+                        {flat.status === 'PENDING_OWNER_APPROVAL' ? (
+                          <button
+                            type="button"
+                            onClick={() => setApplicationSentModalData({
+                              residentName: flat.residentName,
+                              unit: flat.flatNumber,
+                              phone: flat.phone,
+                              serviceType: flat.serviceType,
+                              passcode: flat.gateOtp,
+                              monthlyPay: flat.monthlyPay,
+                              shiftTime: flat.shiftTime
+                            })}
+                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-sm">hourglass_empty</span>
+                            <span>Check Allotment Status</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCheckIn(flat.id)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
+                              flat.checkedInToday
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200'
+                                : 'bg-[#006b2c] text-white hover:bg-[#00873a]'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-sm">
+                              {flat.checkedInToday ? 'check_circle' : 'fingerprint'}
+                            </span>
+                            <span>{flat.checkedInToday ? 'Mark Shift Completed' : 'Check-In Today Shift'}</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1966,8 +2073,14 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-[#7ffc97]/20 border border-[#006b2c]/20 text-[11px] text-[#005320]">
-                ✔ Accepting this offer will issue a Security Gate Entry Pass Code and add this flat to your daily active shift roster.
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-amber-800">
+                  <span className="material-symbols-outlined text-sm">info</span>
+                  <span>Owner Approval Required</span>
+                </div>
+                <p>
+                  Submitting your application &amp; passcode will <strong>NOT</strong> immediately allot you for this flat. The flat owner will be notified to review your profile, contact you, and approve your work allotment.
+                </p>
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#eaedff]">
@@ -1983,11 +2096,160 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                   disabled={isSubmittingHireAccept}
                   className="px-5 py-2 rounded-xl bg-[#006b2c] hover:bg-[#00873a] text-white font-bold transition shadow-xs cursor-pointer flex items-center gap-1"
                 >
-                  <span className="material-symbols-outlined text-sm">check</span>
-                  <span>{isSubmittingHireAccept ? 'Connecting...' : 'Confirm Hiring & Add to Roster'}</span>
+                  <span className="material-symbols-outlined text-sm">send</span>
+                  <span>{isSubmittingHireAccept ? 'Submitting Application...' : 'Submit Application to Flat Owner'}</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Flat Passcode Entry Modal for Solo Staff */}
+      {showPasscodeSubmitModal && (
+        <div className="fixed inset-0 bg-[#131b2e]/60 backdrop-blur-xs z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-amber-200 space-y-4 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                  <span className="material-symbols-outlined text-xl">key</span>
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#131b2e]">Submit Flat Passcode</h3>
+                  <p className="text-[11px] text-gray-500">Apply to Flat Owner using Passcode</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPasscodeSubmitModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitFlatPasscode} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold text-[#131b2e] uppercase text-[10px] block mb-1">Target Flat Unit *</label>
+                <input
+                  type="text"
+                  required
+                  value={enterFlatNumberInput}
+                  onChange={(e) => setEnterFlatNumberInput(e.target.value)}
+                  placeholder="e.g. Flat A-1204"
+                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-bold text-[#131b2e] text-xs focus:bg-white focus:ring-2 focus:ring-[#006b2c]"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-[#131b2e] uppercase text-[10px] block mb-1">Passcode / Invitation Code *</label>
+                <input
+                  type="text"
+                  required
+                  value={enterFlatCodeInput}
+                  onChange={(e) => setEnterFlatCodeInput(e.target.value)}
+                  placeholder="e.g. 4892"
+                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 font-mono font-bold text-amber-900 text-sm focus:bg-white focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+                ℹ️ Submitting this passcode will send your application to the flat owner ({enterFlatNumberInput}). You will receive a popup notification and work allotment once the owner approves.
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowPasscodeSubmitModal(false)}
+                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#006b2c] hover:bg-[#00873a] text-white font-bold transition shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">send</span>
+                  <span>Submit Passcode to Owner</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Application Sent Popup Modal */}
+      {applicationSentModalData && (
+        <div className="fixed inset-0 bg-[#131b2e]/75 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-amber-200 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-bold text-xl shrink-0">
+                  📩
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-[#131b2e]">Application Sent to Flat Owner</h3>
+                  <p className="text-[11px] text-amber-800 font-semibold">Passcode &amp; Profile Submitted • Work Allotment Pending</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApplicationSentModalData(null)}
+                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-[#131b2e] font-bold">
+                <span>Target Flat / Resident:</span>
+                <span className="text-[#006b2c] font-extrabold text-sm">{applicationSentModalData.residentName} ({applicationSentModalData.unit})</span>
+              </div>
+              <div className="flex items-center justify-between text-gray-600">
+                <span>Applied Role:</span>
+                <span className="font-semibold text-gray-900">{applicationSentModalData.serviceType}</span>
+              </div>
+              <div className="flex items-center justify-between text-gray-600">
+                <span>Submitted Code / Passcode:</span>
+                <span className="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                  Passcode #{applicationSentModalData.passcode}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2 text-xs">
+              <div className="font-bold flex items-center gap-2 text-amber-400">
+                <span className="material-symbols-outlined text-base">info</span>
+                <span>Work Allotment Notice</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                You have <strong>NOT</strong> been directly allotted to this flat yet. The flat owner will review your application, verify your passcode, and contact you directly at <strong className="text-white">{applicationSentModalData.phone}</strong>.
+              </p>
+              <p className="text-[11px] text-amber-300 font-medium pt-1">
+                ✔ Once the flat owner contacts &amp; approves your application, your work allotment &amp; daily security gate pass will be activated.
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between gap-3 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => showToast(`Calling ${applicationSentModalData.residentName} at ${applicationSentModalData.phone}...`, 'info')}
+                className="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">call</span>
+                <span>Call Flat Owner</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setApplicationSentModalData(null)}
+                className="px-6 py-2.5 rounded-xl bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-base">check</span>
+                <span>Got It! Await Owner Contact</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
