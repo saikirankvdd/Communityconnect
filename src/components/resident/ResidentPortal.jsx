@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DetailedServicesSection } from './DetailedServicesSection';
 import { serviceApi } from '../../api/serviceApi';
+import { communityApi } from '../../api/communityApi';
 import { DuesPaymentModal } from './DuesPaymentModal';
 import { ChatMessengerModal } from './ChatMessengerModal';
 import { CreatePostModal } from './CreatePostModal';
@@ -70,6 +71,10 @@ const format12HourTime = (time24) => {
 
 export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, services, gate-passes, maintenance, community-feed, society-dues, amenities
+  const [currentCommunity, setCurrentCommunity] = useState(() => {
+    return currentUser?.communityId ? communityApi.getCommunityById(currentUser.communityId) : null;
+  });
+  const isCommunityFrozen = currentCommunity && currentCommunity.status === 'FROZEN';
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('info');
 
@@ -147,44 +152,16 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
 
   const [pollVoted, setPollVoted] = useState(null); // null, 0, 1
   const [pollVotes, setPollVotes] = useState({ yes: 148, no: 52 });
-  const [userLikedPosts, setUserLikedPosts] = useState({}); // { [postId]: boolean }
-
-  const [communityPosts, setCommunityPosts] = useState([
-    {
-      id: 'post-poll-ev',
-      type: 'POLL',
-      category: 'notices',
-      author: 'Managing Committee',
-      authorRole: 'ADMIN',
-      unit: 'Estate Office',
-      title: 'Should we install 8 Dedicated High-Speed EV Fast Chargers in Basement 2?',
-      content: 'Proposed project budget: ₹3.8 Lakhs from society sinking fund. Includes RFID billing & 22kW fast charging plugs.',
-      timestamp: '3 hours ago',
-      likes: 42,
-      comments: [
-        { id: 'c1', author: 'Siddharth Rao', unit: 'Flat B-402', text: 'Great initiative! Fast chargers are much needed for basement 2.', timestamp: '2 hours ago' },
-        { id: 'c2', author: 'Dr. Meenakshi', unit: 'Flat A-901', text: 'Please ensure load balancing with the solar backup plant.', timestamp: '1 hour ago' }
-      ]
-    },
-    {
-      id: 'post-classified-bike',
-      type: 'CLASSIFIED',
-      category: 'classifieds',
-      author: 'Priya Verma',
-      authorRole: 'RESIDENT',
-      unit: 'Flat C-502',
-      title: 'Kids Bicycle (Red) - Like New with Helmet',
-      content: 'Kids bicycle in immaculate condition! Suitable for age 5-8. Bought 6 months ago, outgrown. Helmet and training wheels included free.',
-      price: '₹2,800',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB0d3Pf1gXMcFWDFidcs47Al_UbOIyamyDxiNrkz84bnR9r-wGcF6mveCdWUouCbtxn998W1IwbsjMlYxm31ryHN_t4OjmIq-YJdr6GoEE2DWzzfabeRGkI8bjsKlj77QGR1vFGbgBisYZEoRE-zFaNQ15D7hUIpXREjsnIOanuwvxrJU2wnSIhbYvsCrZ-zF31PeIKQoMHeluLolQbbjRWdmhHTjoENYxgj-oROIypbveQTftP_yECdg',
-      timestamp: 'Yesterday',
-      likes: 14,
-      comments: [
-        { id: 'c3', author: 'Ananya Roy', unit: 'Flat A-304', text: 'Hi Priya, is the bicycle still available? We live in Tower A.', timestamp: 'Yesterday' },
-        { id: 'c4', author: 'Priya Verma', unit: 'Flat C-502', text: 'Yes Ananya! Click Chat with Seller or come by this evening.', timestamp: 'Yesterday' }
-      ]
+  const [userLikedPosts, setUserLikedPosts] = useState(() => {
+    try {
+      const raw = localStorage.getItem('communityconnect_user_liked_posts');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
     }
-  ]);
+  });
+
+  const [communityPosts, setCommunityPosts] = useState(() => serviceApi.getPosts(currentUser?.communityId));
 
   const [expandedComments, setExpandedComments] = useState({ 'post-poll-ev': false, 'post-classified-bike': false });
   const [commentInputs, setCommentInputs] = useState({});
@@ -195,27 +172,146 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   const [autoPayEnabled, setAutoPayEnabled] = useState(true);
   const [cashCollections, setCashCollections] = useState(() => serviceApi.getCashCollections());
 
-  useEffect(() => {
-    const handleVisitorUpdate = () => {
-      setAllVisitorPasses(serviceApi.getVisitorPasses());
-    };
-    window.addEventListener('communityconnect_visitor_updated', handleVisitorUpdate);
-    window.addEventListener('storage', handleVisitorUpdate);
-    return () => {
-      window.removeEventListener('communityconnect_visitor_updated', handleVisitorUpdate);
-      window.removeEventListener('storage', handleVisitorUpdate);
-    };
-  }, []);
+  // Detailed Group Demand Join Modal State
+  const [selectedPoolForJoinModal, setSelectedPoolForJoinModal] = useState(null);
+  const [joinUnitsCount, setJoinUnitsCount] = useState(1);
+  const [joinSlotInput, setJoinSlotInput] = useState('Saturday Morning (09:00 AM - 12:00 PM)');
+  const [joinTargetBidInput, setJoinTargetBidInput] = useState('');
+  const [joinNotesInput, setJoinNotesInput] = useState('');
+
+  // Marketplace & Classified Offers State
+  const [selectedPostForOffer, setSelectedPostForOffer] = useState(null);
+  const [offerPriceInput, setOfferPriceInput] = useState('');
+  const [offerNoteInput, setOfferNoteInput] = useState('');
+  const [marketplaceOffers, setMarketplaceOffers] = useState(() => serviceApi.getMarketplaceOffers());
+
+  // Domestic Staff & Maid Hiring State
+  const [staffRequests, setStaffRequests] = useState(() => serviceApi.getStaffRequests(currentUser?.communityId));
+  const [showCreateStaffModal, setShowCreateStaffModal] = useState(false);
+  const [newStaffType, setNewStaffType] = useState('Cook');
+  const [newStaffTitle, setNewStaffTitle] = useState('');
+  const [newStaffBudget, setNewStaffBudget] = useState('4200');
+  const [newStaffTimeSlot, setNewStaffTimeSlot] = useState('07:30 AM - 09:00 AM');
 
   useEffect(() => {
+    const handlePostsSync = () => {
+      setCommunityPosts(serviceApi.getPosts(currentUser?.communityId));
+    };
+    const handleVisitorSync = () => {
+      setAllVisitorPasses(serviceApi.getVisitorPasses());
+    };
     const handleCashSync = () => {
       setCashCollections(serviceApi.getCashCollections());
     };
-    window.addEventListener('communityconnect_cash_updated', handleCashSync);
-    return () => {
-      window.removeEventListener('communityconnect_cash_updated', handleCashSync);
+    const handleCommunitySync = () => {
+      setCommunityPosts(serviceApi.getPosts(currentUser?.communityId));
     };
-  }, []);
+    const handleOffersSync = () => {
+      setMarketplaceOffers(serviceApi.getMarketplaceOffers());
+    };
+    const handleStaffSync = () => {
+      setStaffRequests(serviceApi.getStaffRequests(currentUser?.communityId));
+    };
+
+    window.addEventListener('communityconnect_posts_updated', handlePostsSync);
+    window.addEventListener('communityconnect_visitor_updated', handleVisitorSync);
+    window.addEventListener('communityconnect_cash_updated', handleCashSync);
+    window.addEventListener('communityconnect_communities_updated', handleCommunitySync);
+    window.addEventListener('communityconnect_offers_updated', handleOffersSync);
+    window.addEventListener('communityconnect_staff_updated', handleStaffSync);
+    window.addEventListener('communityconnect_pools_updated', handlePostsSync);
+    window.addEventListener('storage', handlePostsSync);
+
+    return () => {
+      window.removeEventListener('communityconnect_posts_updated', handlePostsSync);
+      window.removeEventListener('communityconnect_visitor_updated', handleVisitorSync);
+      window.removeEventListener('communityconnect_cash_updated', handleCashSync);
+      window.removeEventListener('communityconnect_communities_updated', handleCommunitySync);
+      window.removeEventListener('communityconnect_offers_updated', handleOffersSync);
+      window.removeEventListener('communityconnect_staff_updated', handleStaffSync);
+      window.removeEventListener('communityconnect_pools_updated', handlePostsSync);
+      window.removeEventListener('storage', handlePostsSync);
+    };
+  }, [currentUser]);
+
+  // Detailed Group Pool Join Handler
+  const handleConfirmJoinPoolDetailed = (e) => {
+    e.preventDefault();
+    if (!selectedPoolForJoinModal) return;
+
+    const updatedPool = serviceApi.joinPoolDetailed(selectedPoolForJoinModal.id, {
+      residentName: currentUser?.name || 'Arjun Kumar',
+      unit: currentUser?.unit || 'Flat A-1204',
+      phone: currentUser?.phone || '+91 98765 43210',
+      unitsBooked: joinUnitsCount,
+      slot: joinSlotInput,
+      targetBidPrice: joinTargetBidInput,
+      notes: joinNotesInput
+    });
+
+    setSelectedPoolForJoinModal(null);
+    setJoinTargetBidInput('');
+    setJoinNotesInput('');
+    showToast(`Successfully configured & joined ${updatedPool.serviceTitle || 'Group Pool'}! Tier price: ₹${updatedPool.discountedPrice}/unit.`, 'success');
+  };
+
+  // Classified Offer Submit Handler
+  const handleConfirmClassifiedOffer = (e) => {
+    e.preventDefault();
+    if (!selectedPostForOffer || !offerPriceInput) return;
+
+    const offer = serviceApi.submitClassifiedOffer(selectedPostForOffer.id, {
+      postTitle: selectedPostForOffer.title,
+      sellerName: selectedPostForOffer.author || 'Priya Verma',
+      sellerUnit: selectedPostForOffer.unit || 'Flat C-502',
+      buyerName: currentUser?.name || 'Arjun Kumar',
+      buyerUnit: currentUser?.unit || 'Flat A-1204',
+      buyerPhone: currentUser?.phone || '+91 98765 43210',
+      askingPrice: selectedPostForOffer.price ? parseInt(selectedPostForOffer.price.replace(/[^0-9]/g, ''), 10) : 5000,
+      offeredPrice: offerPriceInput,
+      message: offerNoteInput
+    });
+
+    setSelectedPostForOffer(null);
+    setOfferPriceInput('');
+    setOfferNoteInput('');
+    showToast(`Price offer of ₹${offer.offeredPrice} dispatched to ${offer.sellerName}!`, 'success');
+  };
+
+  // Accept Offer Handler
+  const handleAcceptClassifiedOffer = (offerId) => {
+    const accepted = serviceApi.acceptClassifiedOffer(offerId);
+    setMarketplaceOffers(serviceApi.getMarketplaceOffers());
+    showToast(`Offer accepted! Item marked as SOLD to ${accepted.buyerName} (${accepted.buyerUnit}).`, 'success');
+  };
+
+  // Post Staff Requirement Handler
+  const handleConfirmCreateStaffRequest = (e) => {
+    e.preventDefault();
+    const newReq = serviceApi.createStaffRequest({
+      communityId: currentUser?.communityId || 'comm-bhooja',
+      residentName: currentUser?.name || 'Arjun Kumar',
+      unit: currentUser?.unit || 'Flat A-1204',
+      phone: currentUser?.phone || '+91 98765 43210',
+      staffType: newStaffType,
+      title: newStaffTitle || `Need ${newStaffType}`,
+      offeredBudget: newStaffBudget,
+      preferredTime: newStaffTimeSlot,
+      description: `Requirement for ${newStaffType} for ${currentUser?.unit || 'Flat A-1204'}.`
+    });
+
+    setShowCreateStaffModal(false);
+    setNewStaffTitle('');
+    showToast(`Requirement for ${newStaffType} broadcast to community staff network!`, 'success');
+  };
+
+  // Accept Maid/Cook Application & Issue Gate Pass
+  const handleAcceptStaffApp = (requestId, appId) => {
+    const res = serviceApi.acceptStaffApplication(requestId, appId);
+    setStaffRequests(serviceApi.getStaffRequests(currentUser?.communityId));
+    setAllVisitorPasses(serviceApi.getVisitorPasses());
+    showToast(`Hired ${res.application.staffName}! Security gate entry pass auto-issued to Gate Guard.`, 'success');
+  };
 
   // Quick Action / Tab Switching
   const switchTab = (tabId) => {
@@ -433,40 +529,41 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
     const text = (commentInputs[postId] || '').trim();
     if (!text) return;
 
-    const newComment = {
-      id: `c-${Date.now()}`,
+    const res = serviceApi.addCommentToPost(postId, {
       author: currentUser?.name || 'Arjun Kumar',
       unit: currentUser?.unit || 'Flat A-1204',
-      text: text,
-      timestamp: 'Just now'
-    };
-
-    setCommunityPosts(prev => prev.map(p => {
-      if (p.id === postId) {
-        return { ...p, comments: [...(p.comments || []), newComment] };
-      }
-      return p;
-    }));
+      text: text
+    });
 
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
     setExpandedComments(prev => ({ ...prev, [postId]: true }));
+    if (res && res.post) {
+      setCommunityPosts(serviceApi.getPosts(currentUser?.communityId));
+    }
     showToast('Your comment has been posted to the community feed!', 'success');
   };
 
   const handleTogglePostLike = (postId) => {
-    const currentlyLiked = userLikedPosts[postId];
-    setUserLikedPosts(prev => ({ ...prev, [postId]: !currentlyLiked }));
-    setCommunityPosts(prev => prev.map(p => {
-      if (p.id === postId) {
-        return { ...p, likes: currentlyLiked ? Math.max(0, (p.likes || 1) - 1) : (p.likes || 0) + 1 };
-      }
-      return p;
-    }));
+    const currentlyLiked = !!userLikedPosts[postId];
+    const newLikedState = { ...userLikedPosts, [postId]: !currentlyLiked };
+    setUserLikedPosts(newLikedState);
+    try {
+      localStorage.setItem('communityconnect_user_liked_posts', JSON.stringify(newLikedState));
+    } catch {}
+
+    serviceApi.toggleLikePost(postId, currentlyLiked);
+    setCommunityPosts(serviceApi.getPosts(currentUser?.communityId));
   };
 
-  const handlePostCreated = (newPost) => {
-    setCommunityPosts(prev => [newPost, ...prev]);
-    showToast(`Post "${newPost.title}" published to Aparna Bhooja community!`, 'success');
+  const handlePostCreated = (newPostData) => {
+    const created = serviceApi.createPost({
+      ...newPostData,
+      communityId: currentUser?.communityId || 'comm-bhooja',
+      author: currentUser?.name || 'Arjun Kumar',
+      unit: currentUser?.unit || 'Flat A-1204'
+    });
+    setCommunityPosts(serviceApi.getPosts(currentUser?.communityId));
+    showToast(`Post "${created.title}" published to community feed!`, 'success');
   };
 
   const openSellerChat = (sellerInfo) => {
@@ -509,7 +606,30 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   const noPct = Math.round((pollVotes.no / totalVotes) * 100);
 
   return (
-    <div className="bg-[#FAF8FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#131B2E] antialiased min-h-screen">
+    <div className={`bg-[#FAF8FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#131B2E] antialiased min-h-screen ${isCommunityFrozen ? 'pt-14' : ''}`}>
+      {/* Community Frozen Lockout Top Banner */}
+      {isCommunityFrozen && (
+        <div className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-rose-700 via-rose-800 to-amber-800 text-white px-5 py-3 shadow-2xl flex items-center justify-between border-b-2 border-rose-300">
+          <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
+            <div className="p-2 bg-white/10 rounded-xl border border-white/20 shrink-0">
+              <span className="material-symbols-outlined text-2xl text-amber-300 animate-pulse">lock</span>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-rose-950/80 text-rose-200 font-black text-[10px] uppercase px-2 py-0.5 rounded border border-rose-400/40">
+                  🔒 SUBSCRIPTION FROZEN / ACCESS BLOCKED
+                </span>
+                <span className="font-extrabold text-sm text-white">
+                  {currentCommunity?.name || 'Community Portal'} Services Suspended
+                </span>
+              </div>
+              <p className="text-xs text-rose-100 mt-0.5">
+                Notice: <em>"{currentCommunity?.freezeReason || 'Annual SaaS License Renewal Past Due'}"</em>. Read-only safety logs active. Contact <strong>support@communityconnect.io</strong> / <strong>+91 800-266-6864</strong> to unfreeze live portal access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Toast Notification Container */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-[9999] pointer-events-none flex flex-col gap-2">
@@ -3091,6 +3211,313 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
             showToast(`Official Society Receipt #${receipt.receiptNo} logged successfully!`, 'success');
           }}
         />
+      )}
+
+      {/* Detailed Group Pool Configuration & Join Modal */}
+      {selectedPoolForJoinModal && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-emerald-100 flex flex-col gap-4 animate-in fade-in duration-200 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-emerald-50 text-[#16A34A] border border-emerald-200">
+                  <span className="material-symbols-outlined text-xl">groups</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Group Demand Pool Configuration</h3>
+                  <p className="text-[11px] text-slate-500">{selectedPoolForJoinModal.serviceTitle || selectedPoolForJoinModal.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPoolForJoinModal(null)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {/* Dynamic Volume Tier Table */}
+            <div className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200 text-xs space-y-2">
+              <div className="flex items-center justify-between font-bold text-emerald-950">
+                <span>Dynamic Volume Pricing Tiers</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 text-[10px]">
+                  {selectedPoolForJoinModal.currentParticipants || 1} Enrolled
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                <div className="p-2 bg-white rounded-xl border border-emerald-200 shadow-2xs">
+                  <div className="text-[10px] text-gray-500 font-semibold">Tier 1 (1-10)</div>
+                  <div className="font-extrabold text-slate-900">₹{selectedPoolForJoinModal.regularPrice ? Math.round(selectedPoolForJoinModal.regularPrice * 0.75) : 549}</div>
+                </div>
+                <div className="p-2 bg-white rounded-xl border border-emerald-300 shadow-2xs">
+                  <div className="text-[10px] text-emerald-700 font-bold">Tier 2 (11-20)</div>
+                  <div className="font-extrabold text-[#16A34A]">₹{selectedPoolForJoinModal.regularPrice ? Math.round(selectedPoolForJoinModal.regularPrice * 0.65) : 489}</div>
+                </div>
+                <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-2xs">
+                  <div className="text-[10px] text-emerald-100 font-bold">Tier 3 (25+)</div>
+                  <div className="font-black text-white">₹{selectedPoolForJoinModal.regularPrice ? Math.round(selectedPoolForJoinModal.regularPrice * 0.55) : 429}</div>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmJoinPoolDetailed} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">
+                    Number of Units / ACs *
+                  </label>
+                  <select
+                    value={joinUnitsCount}
+                    onChange={(e) => setJoinUnitsCount(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                  >
+                    <option value={1}>1 Unit (Standard)</option>
+                    <option value={2}>2 Units (Multi-room Pack)</option>
+                    <option value={3}>3 Units (Whole Flat Pack)</option>
+                    <option value={4}>4 Units (Duplex Pack)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">
+                    Preferred Service Slot *
+                  </label>
+                  <select
+                    value={joinSlotInput}
+                    onChange={(e) => setJoinSlotInput(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                  >
+                    <option>Saturday Morning (09:00 AM - 12:00 PM)</option>
+                    <option>Saturday Afternoon (01:00 PM - 04:00 PM)</option>
+                    <option>Sunday Morning (10:00 AM - 01:00 PM)</option>
+                    <option>Sunday Evening (04:00 PM - 07:00 PM)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">
+                  Target Price Bid <span className="text-gray-400 font-normal">(Optional counter-bid for contractor)</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={joinTargetBidInput}
+                    onChange={(e) => setJoinTargetBidInput(e.target.value)}
+                    placeholder={`Current price: ₹${selectedPoolForJoinModal.discountedPrice || 549} (e.g. 450)`}
+                    className="w-full pl-7 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">
+                  Special Notes / Access Instructions
+                </label>
+                <input
+                  type="text"
+                  value={joinNotesInput}
+                  onChange={(e) => setJoinNotesInput(e.target.value)}
+                  placeholder="e.g. Bring extra ladder for balcony unit"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPoolForJoinModal(null)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Confirm &amp; Join Group Booking
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Classified Price Offer & Negotiation Modal */}
+      {selectedPostForOffer && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-amber-200 flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200">
+                  <span className="material-symbols-outlined text-xl">sell</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Make Price Offer / Buy Item</h3>
+                  <p className="text-[11px] text-slate-500">{selectedPostForOffer.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPostForOffer(null)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <div className="bg-amber-50/80 rounded-2xl p-3.5 border border-amber-200 flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[10px] text-amber-800 uppercase font-bold block">Seller Listed Price</span>
+                <span className="text-base font-black text-amber-950">{selectedPostForOffer.price || '₹5,000'}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-amber-800 uppercase font-bold block">Seller Profile</span>
+                <span className="font-bold text-slate-900">{selectedPostForOffer.author || 'Priya Verma'} ({selectedPostForOffer.unit || 'Flat C-502'})</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmClassifiedOffer} className="space-y-3.5">
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">
+                  Your Price Offer (₹) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={offerPriceInput}
+                  onChange={(e) => setOfferPriceInput(e.target.value)}
+                  placeholder="e.g. 4500"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-extrabold text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">
+                  Message for Seller *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={offerNoteInput}
+                  onChange={(e) => setOfferNoteInput(e.target.value)}
+                  placeholder="e.g. Interested in buying this cycle for my daughter. Can inspect and pick it up today."
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPostForOffer(null)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Submit Price Offer to Seller
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Post Staff Requirement Modal */}
+      {showCreateStaffModal && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-emerald-100 flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-2xl bg-emerald-50 text-[#16A34A] border border-emerald-200">
+                  <span className="material-symbols-outlined text-xl">person_add</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Post Staff / Helper Requirement</h3>
+                  <p className="text-[11px] text-slate-500">Flat {currentUser?.unit || 'Flat A-1204'} • Community Staff Network</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateStaffModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCreateStaffRequest} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Staff Category *</label>
+                  <select
+                    value={newStaffType}
+                    onChange={(e) => setNewStaffType(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                  >
+                    <option value="Cook">Home Cook / Chef</option>
+                    <option value="Maid">Housekeeping Maid</option>
+                    <option value="Driver">Private Chauffeur / Driver</option>
+                    <option value="Nanny">Babysitter / Nanny</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Monthly Budget (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={newStaffBudget}
+                    onChange={(e) => setNewStaffBudget(e.target.value)}
+                    placeholder="e.g. 4200"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-extrabold text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Requirement Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={newStaffTitle}
+                  onChange={(e) => setNewStaffTitle(e.target.value)}
+                  placeholder="e.g. Morning South Indian Cook for 3-member family"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Preferred Shift Slot *</label>
+                <input
+                  type="text"
+                  required
+                  value={newStaffTimeSlot}
+                  onChange={(e) => setNewStaffTimeSlot(e.target.value)}
+                  placeholder="e.g. 07:30 AM - 09:00 AM"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#16A34A]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateStaffModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Broadcast Staff Requirement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

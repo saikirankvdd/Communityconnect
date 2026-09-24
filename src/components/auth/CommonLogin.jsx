@@ -40,11 +40,21 @@ const EIGHT_QUICK_MEMBERS = [
     id: 'usr-res-arjun',
     name: 'Arjun Kumar',
     role: 'RESIDENT',
-    badge: 'Resident (Owner)',
+    badge: 'Resident #1 (A-1204)',
     badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
     title: 'Flat A-1204 • My Home Bhooja',
     email: 'arjun.kumar@example.com',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80'
+  },
+  {
+    id: 'usr-res-priya',
+    name: 'Priya Verma',
+    role: 'RESIDENT',
+    badge: 'Resident #2 (C-502)',
+    badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+    title: 'Flat C-502 • My Home Bhooja',
+    email: 'priya.verma@example.com',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80'
   },
   {
     id: 'usr-sec-ramsingh',
@@ -116,6 +126,30 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
+  const [blockedModalData, setBlockedModalData] = useState(null);
+  const [pendingApprovalModalData, setPendingApprovalModalData] = useState(null);
+
+  const handleAuthError = (err) => {
+    if (err.isBlocked || err.message === 'COMMUNITY_FROZEN') {
+      setBlockedModalData({
+        communityName: err.communityName || 'Community',
+        reason: err.freezeReason || 'Platform SaaS subscription license renewal is past due.',
+        contactEmail: err.contactEmail || 'support@communityconnect.io',
+        contactPhone: err.contactPhone || '+91 800-266-6864'
+      });
+    } else if (err.isPendingApproval || err.message === 'RESIDENT_PENDING_APPROVAL') {
+      setPendingApprovalModalData({
+        communityName: err.communityName || 'Community',
+        flatNumber: err.flatNumber || 'Flat',
+        residentName: err.residentName || 'Resident',
+        contactEmail: err.contactEmail || 'admin@communityconnect.io',
+        contactPhone: err.contactPhone || '+91 800-266-6864'
+      });
+    } else {
+      setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');
+    }
+  };
+
   // Handle standard login
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -130,7 +164,7 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
       const response = await authApi.login(identifier, password);
       onLoginSuccess(response.user);
     } catch (err) {
-      setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');
+      handleAuthError(err);
     } finally {
       setIsLoading(false);
     }
@@ -322,7 +356,7 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
                     setIsLoading(true);
                     authApi.login(m.email, 'password123')
                       .then((res) => onLoginSuccess(res.user))
-                      .catch((err) => setErrorMsg(err.message))
+                      .catch((err) => handleAuthError(err))
                       .finally(() => setIsLoading(false));
                   }}
                   className="w-full text-left p-2 sm:p-2.5 rounded-xl bg-gray-50/80 hover:bg-emerald-50/60 border border-gray-200/80 hover:border-emerald-300 transition flex items-center justify-between gap-2.5 cursor-pointer group"
@@ -499,6 +533,132 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+      {/* Account Blocked / Frozen Community Modal Pop-up */}
+      {blockedModalData && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-rose-200 flex flex-col gap-5 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-rose-100 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="p-3.5 bg-rose-100 text-rose-700 rounded-2xl border border-rose-300 shrink-0 shadow-sm">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase tracking-wide mb-1.5 shadow-xs">
+                  🔒 Subscription Frozen / Access Suspended
+                </div>
+                <h3 className="text-xl font-extrabold text-slate-900">Community Access Blocked</h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Portal access for <span className="font-bold text-slate-900">{blockedModalData.communityName}</span> has been frozen by Platform HQ Operations.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/70 rounded-2xl p-4 border border-rose-200/90 flex flex-col gap-1.5 relative z-10">
+              <span className="text-[10px] font-extrabold text-rose-700 uppercase tracking-wider">Freeze Reason / Notice</span>
+              <p className="text-xs text-slate-800 font-medium leading-relaxed italic">
+                "{blockedModalData.reason}"
+              </p>
+            </div>
+
+            <div className="bg-amber-50/90 rounded-2xl p-4 border border-amber-200 text-xs text-amber-950 flex flex-col gap-2 relative z-10">
+              <span className="font-extrabold text-amber-950 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-700" />
+                How to Restore Service:
+              </span>
+              <p className="text-[11px] text-amber-900 leading-normal">
+                Please contact Platform HQ Super-Admin or Finance Office to unfreeze society access and restore live portal services:
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-amber-200/80 font-bold text-xs">
+                <a href={`mailto:${blockedModalData.contactEmail}`} className="text-[#16A34A] hover:underline flex items-center gap-1">
+                  📧 {blockedModalData.contactEmail}
+                </a>
+                <span className="hidden sm:inline text-amber-400">•</span>
+                <a href={`tel:${blockedModalData.contactPhone}`} className="text-[#16A34A] hover:underline flex items-center gap-1">
+                  📞 {blockedModalData.contactPhone}
+                </a>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100 relative z-10">
+              <button
+                type="button"
+                onClick={() => setBlockedModalData(null)}
+                className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
+                Dismiss &amp; Close Notice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resident Registration Pending Approval Modal Pop-up */}
+      {pendingApprovalModalData && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-amber-200 flex flex-col gap-5 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-100 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="p-3.5 bg-amber-100 text-amber-800 rounded-2xl border border-amber-300 shrink-0 shadow-sm">
+                <Lock className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-wide mb-1.5 shadow-xs">
+                  ⏳ Registration Request Pending
+                </div>
+                <h3 className="text-xl font-extrabold text-slate-900">Portal Access Locked</h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  Resident account for <span className="font-bold text-slate-900">{pendingApprovalModalData.residentName}</span> ({pendingApprovalModalData.flatNumber}) is under Management Committee review.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50/90 rounded-2xl p-4 border border-amber-200/90 flex flex-col gap-2 relative z-10 text-xs text-amber-950">
+              <span className="font-extrabold text-amber-900 uppercase tracking-wider text-[10px]">Zero-Trust Security Notice</span>
+              <p className="text-xs text-slate-800 leading-relaxed font-medium">
+                Temporary access credentials are disabled to protect society data privacy. You will gain full portal access once the President approves your residency application.
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 text-xs text-gray-800 flex flex-col gap-2 relative z-10">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-gray-500 font-medium">Estimated Waiting Period:</span>
+                <span className="font-bold text-gray-900 bg-white px-2 py-0.5 rounded-md border border-gray-200">24 – 48 Hours (2–5 Days)</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-gray-500 font-medium">SMS Alert Notification:</span>
+                <span className="font-bold text-emerald-700 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Dispatched upon Approval
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t border-slate-100 relative z-10">
+              {onNavigate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingApprovalModalData(null);
+                    onNavigate('community-admin');
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>Switch to President View to Approve</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setPendingApprovalModalData(null)}
+                className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
+                Dismiss &amp; Close Notice
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -118,6 +118,9 @@ export const serviceApi = {
     }
 
     localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_pools_updated', { detail: pool }));
+    } catch {}
     return pool;
   },
 
@@ -142,6 +145,9 @@ export const serviceApi = {
     };
     list.unshift(newPool);
     localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_pools_updated', { detail: newPool }));
+    } catch {}
     return newPool;
   },
 
@@ -173,7 +179,9 @@ export const serviceApi = {
     };
 
     localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(list));
-    window.dispatchEvent(new Event('communityconnect_visitor_updated'));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_pools_updated', { detail: pool }));
+    } catch {}
     return pool;
   },
 
@@ -238,6 +246,9 @@ export const serviceApi = {
 
     list.unshift(newReq);
     localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_requests_updated', { detail: newReq }));
+    } catch {}
 
     // If marked as group request, create a pool automatically
     if (requestData.isGroupRequest) {
@@ -270,6 +281,9 @@ export const serviceApi = {
     if (step === 5) req.status = 'COMPLETED';
 
     localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_requests_updated', { detail: req }));
+    } catch {}
     return req;
   },
 
@@ -296,6 +310,9 @@ export const serviceApi = {
     req.status = 'QUOTES_RECEIVED';
 
     localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_requests_updated', { detail: req }));
+    } catch {}
     return req;
   },
 
@@ -1133,5 +1150,308 @@ export const serviceApi = {
       window.dispatchEvent(new CustomEvent('communityconnect_escalation_updated', { detail: newEscalation }));
     } catch {}
     return newEscalation;
+  },
+
+  // Domestic Staff & Helper Hiring API
+  getStaffRequests(communityId = null) {
+    const key = 'communityconnect_staff_requests';
+    const raw = localStorage.getItem(key);
+    let list = [];
+    if (!raw) {
+      list = [
+        {
+          id: 'SREQ-101',
+          communityId: 'comm-bhooja',
+          residentName: 'Arjun Kumar',
+          unit: 'Flat A-1204',
+          phone: '+91 98765 43210',
+          staffType: 'Cook',
+          title: 'Morning South & North Indian Cook Needed',
+          description: 'Looking for experienced home cook for 3-member family. Morning 07:30 AM to 09:00 AM slot.',
+          offeredBudget: 4200,
+          preferredTime: '07:30 AM - 09:00 AM',
+          status: 'OPEN_FOR_APPLICATIONS',
+          createdAt: 'Today',
+          applications: [
+            {
+              id: 'APP-101',
+              staffId: 'usr-prov-sunita',
+              staffName: 'Sunita Devi',
+              phone: '+91 98888 77665',
+              category: 'Cook',
+              rating: 4.9,
+              proposedMonthlyPay: 4200,
+              proposedShiftTime: '07:30 AM - 09:00 AM (Morning)',
+              specialties: ['North Indian', 'South Indian', 'Low Oil Hygiene'],
+              note: 'I am already serving Flat B-402 in Tower B. Available for your morning slot!',
+              appliedAt: 'Today',
+              status: 'PENDING_RESIDENT_REVIEW'
+            }
+          ]
+        }
+      ];
+      localStorage.setItem(key, JSON.stringify(list));
+    } else {
+      try { list = JSON.parse(raw); } catch { list = []; }
+    }
+    if (communityId) {
+      return list.filter((s) => !s.communityId || s.communityId === communityId);
+    }
+    return list;
+  },
+
+  createStaffRequest(requestData) {
+    const key = 'communityconnect_staff_requests';
+    const list = this.getStaffRequests();
+    const newReq = {
+      id: `SREQ-${Date.now().toString().slice(-4)}`,
+      communityId: requestData.communityId || 'comm-bhooja',
+      residentName: requestData.residentName || 'Arjun Kumar',
+      unit: requestData.unit || 'Flat A-1204',
+      phone: requestData.phone || '+91 98765 43210',
+      staffType: requestData.staffType || 'Cook',
+      title: requestData.title || `Need ${requestData.staffType || 'Staff'}`,
+      description: requestData.description || 'Domestic helper required.',
+      offeredBudget: Number(requestData.offeredBudget) || 4000,
+      preferredTime: requestData.preferredTime || 'Morning Shift',
+      status: 'OPEN_FOR_APPLICATIONS',
+      createdAt: 'Just now',
+      applications: []
+    };
+    list.unshift(newReq);
+    localStorage.setItem(key, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_staff_updated', { detail: newReq }));
+    } catch {}
+    return newReq;
+  },
+
+  submitStaffApplication(requestId, staffData) {
+    const key = 'communityconnect_staff_requests';
+    const list = this.getStaffRequests();
+    const req = list.find((r) => r.id === requestId);
+    if (!req) throw new Error('Staff request not found');
+
+    if (!req.applications) req.applications = [];
+    const newApp = {
+      id: `APP-${Date.now().toString().slice(-4)}`,
+      staffId: staffData.staffId || 'usr-prov-sunita',
+      staffName: staffData.staffName || 'Sunita Devi',
+      phone: staffData.phone || '+91 98888 77665',
+      category: staffData.category || req.staffType || 'Cook',
+      rating: staffData.rating || 4.9,
+      proposedMonthlyPay: Number(staffData.proposedMonthlyPay) || req.offeredBudget,
+      proposedShiftTime: staffData.proposedShiftTime || req.preferredTime,
+      specialties: staffData.specialties || ['Police Verified', 'Hygiene First'],
+      note: staffData.note || 'Available to start work immediately.',
+      appliedAt: 'Just now',
+      status: 'PENDING_RESIDENT_REVIEW'
+    };
+    req.applications.unshift(newApp);
+    localStorage.setItem(key, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_staff_updated', { detail: req }));
+    } catch {}
+    return { req, application: newApp };
+  },
+
+  acceptStaffApplication(requestId, applicationId) {
+    const key = 'communityconnect_staff_requests';
+    const list = this.getStaffRequests();
+    const req = list.find((r) => r.id === requestId);
+    if (!req) throw new Error('Staff request not found');
+
+    const app = (req.applications || []).find((a) => a.id === applicationId);
+    if (!app) throw new Error('Application not found');
+
+    app.status = 'ACCEPTED';
+    req.status = 'HIRED';
+    req.hiredStaff = app;
+
+    localStorage.setItem(key, JSON.stringify(list));
+
+    // Auto-generate Security Gate Pass for Gate Guard
+    this.createVisitorPass({
+      guestName: app.staffName,
+      companyName: `${app.category || 'Domestic Helper'} Pass`,
+      company: 'Domestic Staff',
+      visitorType: 'CONTRACTOR',
+      visitorCategory: app.category || 'Staff',
+      phone: app.phone,
+      vehicleNumber: 'N/A (Walk-In Staff Pass)',
+      entryMode: 'Walk-In / On Foot',
+      isWalkIn: true,
+      hostUnit: req.unit,
+      validDate: 'Daily Access',
+      validDuration: app.proposedShiftTime || 'Daily Morning Shift',
+      issuedBy: `${req.residentName} (${req.unit})`,
+      otpCode: Math.floor(1000 + Math.random() * 9000).toString(),
+      status: 'EXPECTED'
+    });
+
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_staff_updated', { detail: req }));
+    } catch {}
+    return { req, application: app };
+  },
+
+  // Marketplace & Classified Price Offers API
+  getMarketplaceOffers(postId = null) {
+    const key = 'communityconnect_marketplace_offers';
+    const raw = localStorage.getItem(key);
+    let list = [];
+    if (!raw) {
+      list = [
+        {
+          id: 'OFFER-201',
+          postId: 'post-classified-bike',
+          postTitle: 'Kids Bicycle (Red) - Like New with Helmet',
+          sellerName: 'Priya Verma',
+          sellerUnit: 'Flat C-502',
+          buyerName: 'Arjun Kumar',
+          buyerUnit: 'Flat A-1204',
+          buyerPhone: '+91 98765 43210',
+          askingPrice: 2800,
+          offeredPrice: 2500,
+          message: 'Hi Priya! Can pick it up today evening for ₹2,500 for my daughter.',
+          status: 'PENDING_SELLER',
+          createdAt: 'Today, 11:30 AM'
+        }
+      ];
+      localStorage.setItem(key, JSON.stringify(list));
+    } else {
+      try { list = JSON.parse(raw); } catch { list = []; }
+    }
+    if (postId) {
+      return list.filter((o) => o.postId === postId);
+    }
+    return list;
+  },
+
+  submitClassifiedOffer(postId, offerData) {
+    const key = 'communityconnect_marketplace_offers';
+    const list = this.getMarketplaceOffers();
+    const newOffer = {
+      id: `OFFER-${Date.now().toString().slice(-4)}`,
+      postId: postId,
+      postTitle: offerData.postTitle || 'Classified Item',
+      sellerName: offerData.sellerName || 'Resident',
+      sellerUnit: offerData.sellerUnit || 'Estate',
+      buyerName: offerData.buyerName || 'Arjun Kumar',
+      buyerUnit: offerData.buyerUnit || 'Flat A-1204',
+      buyerPhone: offerData.buyerPhone || '+91 98765 43210',
+      askingPrice: Number(offerData.askingPrice) || 5000,
+      offeredPrice: Number(offerData.offeredPrice) || Number(offerData.askingPrice) || 4500,
+      message: offerData.message || 'Interested in buying this item!',
+      status: 'PENDING_SELLER',
+      createdAt: 'Just now'
+    };
+    list.unshift(newOffer);
+    localStorage.setItem(key, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_offers_updated', { detail: newOffer }));
+    } catch {}
+    return newOffer;
+  },
+
+  acceptClassifiedOffer(offerId) {
+    const key = 'communityconnect_marketplace_offers';
+    const list = this.getMarketplaceOffers();
+    const offer = list.find((o) => o.id === offerId);
+    if (!offer) throw new Error('Offer not found');
+
+    offer.status = 'ACCEPTED';
+
+    // Mark post as SOLD in feed
+    const posts = getStoredPosts();
+    const post = posts.find((p) => p.id === offer.postId);
+    if (post) {
+      post.isSold = true;
+      post.soldTo = `${offer.buyerName} (${offer.buyerUnit})`;
+      post.title = `[SOLD] ${post.title}`;
+      localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
+      try {
+        window.dispatchEvent(new CustomEvent('communityconnect_posts_updated', { detail: post }));
+      } catch {}
+    }
+
+    localStorage.setItem(key, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_offers_updated', { detail: offer }));
+    } catch {}
+    return offer;
+  },
+
+  // Detailed Group Demand Pool Joining with Slot, Units & Target Bidding
+  joinPoolDetailed(poolId, joinData) {
+    const list = getStoredPools();
+    const pool = list.find((p) => p.id === poolId);
+    if (!pool) throw new Error('Pool not found');
+
+    const unitsCount = Number(joinData.unitsBooked) || 1;
+    const existingIdx = (pool.participants || []).findIndex(
+      (p) => p.residentName === joinData.residentName && p.unit === joinData.unit
+    );
+
+    const participantEntry = {
+      residentName: joinData.residentName || 'Arjun Kumar',
+      unit: joinData.unit || 'Flat A-1204',
+      phone: joinData.phone || '+91 98765 43210',
+      unitsBooked: unitsCount,
+      slot: joinData.slot || 'Saturday Drive Slot',
+      preferredDate: joinData.preferredDate || 'Upcoming Weekend',
+      targetBidPrice: joinData.targetBidPrice ? Number(joinData.targetBidPrice) : null,
+      notes: joinData.notes || '',
+      joinedAt: new Date().toISOString().split('T')[0]
+    };
+
+    if (existingIdx !== -1) {
+      pool.participants[existingIdx] = participantEntry;
+    } else {
+      pool.participants.unshift(participantEntry);
+    }
+
+    pool.currentParticipants = pool.participants.reduce((acc, p) => acc + (Number(p.unitsBooked) || 1), 0);
+
+    // Calculate Dynamic Tier Discount based on total units booked
+    const previousPrice = pool.discountedPrice;
+    if (pool.currentParticipants >= 25) {
+      pool.discountedPrice = Math.round(pool.regularPrice * 0.55); // ~45% OFF
+    } else if (pool.currentParticipants >= 10) {
+      pool.discountedPrice = Math.round(pool.regularPrice * 0.65); // ~35% OFF
+    } else {
+      pool.discountedPrice = pool.discountedPrice || Math.round(pool.regularPrice * 0.75);
+    }
+
+    pool.savingsPercent = Math.round(((pool.regularPrice - pool.discountedPrice) / pool.regularPrice) * 100);
+    if (previousPrice !== pool.discountedPrice) {
+      pool.hasPriceDrop = true;
+      pool.priceDropNotice = `Price dropped from ₹${previousPrice} to ₹${pool.discountedPrice} due to high group volume!`;
+    }
+
+    localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_pools_updated', { detail: pool }));
+    } catch {}
+    return pool;
+  },
+
+  optOutPool(poolId, residentName, unit) {
+    const list = getStoredPools();
+    const pool = list.find((p) => p.id === poolId);
+    if (!pool) throw new Error('Pool not found');
+
+    if (pool.participants) {
+      pool.participants = pool.participants.filter(
+        (p) => !(p.residentName === residentName && p.unit === unit)
+      );
+      pool.currentParticipants = pool.participants.reduce((acc, p) => acc + (Number(p.unitsBooked) || 1), 0);
+    }
+
+    localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_pools_updated', { detail: pool }));
+    } catch {}
+    return pool;
   }
 };

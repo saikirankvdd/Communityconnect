@@ -9,6 +9,7 @@ import {
   INITIAL_COMMUNITY_POSTS,
   INITIAL_VERIFICATION_CASES
 } from '../data/initialData';
+import { communityApi } from './communityApi';
 
 export const PRECONFIGURED_PERSONAS = PRECONFIGURED_USERS;
 
@@ -92,6 +93,32 @@ export const authApi = {
         accessLevel: 'PERMANENT',
         title: 'Resident'
       };
+    }
+
+    // Check if user's community is frozen (unless platform admin)
+    if (matchedUser && matchedUser.communityId && matchedUser.role !== 'PLATFORM_ADMIN') {
+      const comm = communityApi.getCommunityById(matchedUser.communityId);
+      if (comm && comm.status === 'FROZEN') {
+        const freezeErr = new Error('COMMUNITY_FROZEN');
+        freezeErr.isBlocked = true;
+        freezeErr.communityName = comm.name;
+        freezeErr.freezeReason = comm.freezeReason || 'Platform SaaS license subscription is past due.';
+        freezeErr.contactEmail = 'support@communityconnect.io';
+        freezeErr.contactPhone = '+91 800-266-6864';
+        throw freezeErr;
+      }
+    }
+
+    // Check if user is pending admin approval / verification
+    if (matchedUser && (matchedUser.isPendingApproval || matchedUser.accessLevel === 'PENDING_APPROVAL' || matchedUser.status === 'PENDING_ADMIN_APPROVAL')) {
+      const pendingErr = new Error('RESIDENT_PENDING_APPROVAL');
+      pendingErr.isPendingApproval = true;
+      pendingErr.communityName = matchedUser.communityName || 'Community';
+      pendingErr.flatNumber = matchedUser.flatNumber || 'Flat';
+      pendingErr.residentName = matchedUser.name || 'Resident';
+      pendingErr.contactEmail = 'admin@communityconnect.io';
+      pendingErr.contactPhone = '+91 800-266-6864';
+      throw pendingErr;
     }
 
     // Return JWT-like authentication payload
@@ -188,6 +215,19 @@ export const authApi = {
       target = PRECONFIGURED_USERS[0];
     }
 
+    if (target && target.communityId && target.role !== 'PLATFORM_ADMIN') {
+      const comm = communityApi.getCommunityById(target.communityId);
+      if (comm && comm.status === 'FROZEN') {
+        const freezeErr = new Error('COMMUNITY_FROZEN');
+        freezeErr.isBlocked = true;
+        freezeErr.communityName = comm.name;
+        freezeErr.freezeReason = comm.freezeReason || 'Platform SaaS license subscription is past due.';
+        freezeErr.contactEmail = 'support@communityconnect.io';
+        freezeErr.contactPhone = '+91 800-266-6864';
+        throw freezeErr;
+      }
+    }
+
     const session = {
       token: `jwt-bearer-${target.id}-${Date.now()}`,
       user: {
@@ -247,7 +287,9 @@ export const authApi = {
       communityName: formData.communityName,
       flatNumber: formData.flatNumber,
       residentType: formData.residentType || 'Owner',
-      accessLevel: formData.hasConflict ? 'TEMPORARY' : 'PERMANENT',
+      accessLevel: 'PENDING_APPROVAL',
+      isPendingApproval: true,
+      status: 'PENDING_ADMIN_APPROVAL',
       avatar: null,
       familyCount: 1
     };
@@ -258,10 +300,8 @@ export const authApi = {
     return {
       success: true,
       user: newUser,
-      requiresVerification: formData.hasConflict,
-      message: formData.hasConflict
-        ? 'Account registered! Your occupancy request is queued for security & admin verification.'
-        : 'Account verified and activated successfully!'
+      requiresVerification: true,
+      message: 'Account registered! Your request is sent to the Management Committee President. Waiting period: 24-48 Hours.'
     };
   },
 

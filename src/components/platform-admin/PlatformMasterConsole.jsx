@@ -1,23 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { INITIAL_COMMUNITIES } from '../../data/initialData';
 import { authApi } from '../../api/authApi';
+import { communityApi } from '../../api/communityApi';
 import { BrandLogo } from '../common/BrandLogo';
 
 export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => {
   // Navigation tabs: 'tenants' | 'billing' | 'policies' | 'invites' | 'health'
   const [activeTab, setActiveTab] = useState('tenants');
   const [communities, setCommunities] = useState(() => {
-    return INITIAL_COMMUNITIES.map((c) => ({
+    const list = communityApi.getCommunities();
+    return list.map((c) => ({
       ...c,
-      subscriptionFee: c.plan === 'ENTERPRISE_PREMIUM' ? 65000 : 35000,
-      privacyPolicyStatus: 'ACCEPTED',
-      privacyPolicyDate: c.onboardedDate || '2025-01-15',
+      subscriptionFee: c.subscriptionFee || (c.plan === 'ENTERPRISE_PREMIUM' ? 65000 : 35000),
+      privacyPolicyStatus: c.privacyPolicyStatus || 'ACCEPTED',
+      privacyPolicyDate: c.privacyPolicyDate || c.onboardedDate || '2025-01-15',
       dpdpCompliant: true,
       termsOfService: 'SIGNED',
       schemaId: `tenant_schema_${c.id.replace('comm-', '')}`,
       inviteStatus: 'ACTIVATED'
     }));
   });
+
+  const refreshCommunities = () => {
+    const list = communityApi.getCommunities();
+    setCommunities(
+      list.map((c) => ({
+        ...c,
+        subscriptionFee: c.subscriptionFee || (c.plan === 'ENTERPRISE_PREMIUM' ? 65000 : 35000),
+        privacyPolicyStatus: c.privacyPolicyStatus || 'ACCEPTED',
+        privacyPolicyDate: c.privacyPolicyDate || c.onboardedDate || '2025-01-15',
+        dpdpCompliant: true,
+        termsOfService: 'SIGNED',
+        schemaId: `tenant_schema_${c.id.replace('comm-', '')}`,
+        inviteStatus: 'ACTIVATED'
+      }))
+    );
+  };
+
+  useEffect(() => {
+    window.addEventListener('communityconnect_communities_updated', refreshCommunities);
+    window.addEventListener('storage', refreshCommunities);
+    return () => {
+      window.removeEventListener('communityconnect_communities_updated', refreshCommunities);
+      window.removeEventListener('storage', refreshCommunities);
+    };
+  }, []);
   const [invitations, setInvitations] = useState(() => authApi.getInvitations());
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('info');
@@ -71,11 +98,9 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
 
   const handleToggleFreeze = (comm) => {
     if (comm.status === 'FROZEN') {
-      const updated = communities.map((c) =>
-        c.id === comm.id ? { ...c, status: 'ACTIVE', freezeReason: null } : c
-      );
-      setCommunities(updated);
-      showToast(`${comm.name} has been restored to ACTIVE status across all clusters.`, 'success');
+      communityApi.toggleCommunityStatus(comm.id, 'ACTIVE');
+      refreshCommunities();
+      showToast(`${comm.name} has been restored to ACTIVE status across all clusters. Access unblocked.`, 'success');
       if (inspectModalComm && inspectModalComm.id === comm.id) {
         setInspectModalComm({ ...inspectModalComm, status: 'ACTIVE', freezeReason: null });
       }
@@ -89,14 +114,10 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
     e.preventDefault();
     if (!selectedCommForFreeze) return;
 
-    const updated = communities.map((c) =>
-      c.id === selectedCommForFreeze.id
-        ? { ...c, status: 'FROZEN', freezeReason: freezeReasonInput }
-        : c
-    );
-    setCommunities(updated);
+    communityApi.toggleCommunityStatus(selectedCommForFreeze.id, 'FROZEN', freezeReasonInput);
+    refreshCommunities();
     setShowFreezeModal(false);
-    showToast(`Tenant isolation freeze applied to ${selectedCommForFreeze.name}. Platform console locked to read-only safety mode.`, 'error');
+    showToast(`Tenant isolation freeze applied to ${selectedCommForFreeze.name}. Access blocked across login and live portals!`, 'error');
     if (inspectModalComm && inspectModalComm.id === selectedCommForFreeze.id) {
       setInspectModalComm({ ...inspectModalComm, status: 'FROZEN', freezeReason: freezeReasonInput });
     }

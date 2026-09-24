@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { serviceApi } from '../../api/serviceApi';
+import { communityApi } from '../../api/communityApi';
 import { WorkOrderResolveModal } from './WorkOrderResolveModal';
 import { WorkOrderEscalateModal } from './WorkOrderEscalateModal';
 import { SecurityDirectiveModal } from './SecurityDirectiveModal';
@@ -19,6 +20,10 @@ import { CreateGatePassModal } from '../common/CreateGatePassModal';
 
 export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, board, gate, maintenance, feed, dues, vendors, banking
+  const [currentCommunity, setCurrentCommunity] = useState(() => {
+    return currentUser?.communityId ? communityApi.getCommunityById(currentUser.communityId) : null;
+  });
+  const isCommunityFrozen = currentCommunity && currentCommunity.status === 'FROZEN';
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSecurityVerifModal, setShowSecurityVerifModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -117,11 +122,19 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
       }
     };
 
+    const handleCommunitiesUpdate = () => {
+      if (currentUser?.communityId) {
+        setCurrentCommunity(communityApi.getCommunityById(currentUser.communityId));
+      }
+    };
+
     window.addEventListener('communityconnect_treasury_updated', handleTreasuryUpdate);
     window.addEventListener('communityconnect_security_directive_updated', handleDirectiveUpdate);
     window.addEventListener('communityconnect_posts_updated', handlePostsUpdate);
     window.addEventListener('communityconnect_visitor_updated', handleVisitorsUpdate);
     window.addEventListener('communityconnect_kyc_updated', handleKycUpdate);
+    window.addEventListener('communityconnect_communities_updated', handleCommunitiesUpdate);
+    window.addEventListener('storage', handleCommunitiesUpdate);
 
     return () => {
       window.removeEventListener('communityconnect_treasury_updated', handleTreasuryUpdate);
@@ -129,6 +142,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
       window.removeEventListener('communityconnect_posts_updated', handlePostsUpdate);
       window.removeEventListener('communityconnect_visitor_updated', handleVisitorsUpdate);
       window.removeEventListener('communityconnect_kyc_updated', handleKycUpdate);
+      window.removeEventListener('communityconnect_communities_updated', handleCommunitiesUpdate);
+      window.removeEventListener('storage', handleCommunitiesUpdate);
     };
   }, []);
 
@@ -922,7 +937,30 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
   };
 
   return (
-    <div className="bg-[#FAF8FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#131B2E] antialiased min-h-screen flex">
+    <div className={`bg-[#FAF8FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#131B2E] antialiased min-h-screen flex ${isCommunityFrozen ? 'pt-16' : ''}`}>
+      {/* Community Frozen Lockout Top Banner */}
+      {isCommunityFrozen && (
+        <div className="fixed top-0 left-0 right-0 z-[99999] bg-gradient-to-r from-rose-700 via-rose-800 to-amber-800 text-white px-5 py-3.5 shadow-2xl flex items-center justify-between border-b-2 border-rose-300">
+          <div className="flex items-center gap-3 max-w-7xl mx-auto w-full">
+            <div className="p-2 bg-white/10 rounded-xl border border-white/20 shrink-0">
+              <span className="material-symbols-outlined text-2xl text-amber-300 animate-pulse">lock</span>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-rose-950/80 text-rose-200 font-black text-[10px] uppercase px-2 py-0.5 rounded border border-rose-400/40">
+                  🔒 SUBSCRIPTION FROZEN / ACCESS BLOCKED
+                </span>
+                <span className="font-extrabold text-sm text-white">
+                  {currentCommunity?.name || 'Community Portal'} Services Suspended
+                </span>
+              </div>
+              <p className="text-xs text-rose-100 mt-0.5">
+                Notice: <em>"{currentCommunity?.freezeReason || 'Annual SaaS License Renewal Past Due'}"</em>. Read-only safety logs active. Contact <strong>support@communityconnect.io</strong> / <strong>+91 800-266-6864</strong> to unfreeze live portal access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-[9999] pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl text-sm font-semibold text-white transition-all transform animate-bounce">

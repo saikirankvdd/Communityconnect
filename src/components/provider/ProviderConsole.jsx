@@ -99,6 +99,23 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('info');
 
+  useEffect(() => {
+    const handleSync = () => {
+      setPools(serviceApi.getPools());
+      setRequests(serviceApi.getRequests());
+    };
+    window.addEventListener('communityconnect_pools_updated', handleSync);
+    window.addEventListener('communityconnect_requests_updated', handleSync);
+    window.addEventListener('communityconnect_staff_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('communityconnect_pools_updated', handleSync);
+      window.removeEventListener('communityconnect_requests_updated', handleSync);
+      window.removeEventListener('communityconnect_staff_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   // Direct Hire Accept Form State for Cook/Maid
   const [monthlyRateInput, setMonthlyRateInput] = useState('4500');
   const [shiftTimingInput, setShiftTimingInput] = useState('07:30 AM - 09:30 AM (Morning Shift)');

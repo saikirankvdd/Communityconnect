@@ -127,6 +127,9 @@ export const communityApi = {
     }
 
     localStorage.setItem(COMMUNITIES_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_communities_updated', { detail: target }));
+    } catch {}
     return target;
   },
 

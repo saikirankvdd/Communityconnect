@@ -179,11 +179,29 @@ export const PRECONFIGURED_USERS = [
     flatNumber: 'A-1204',
     tower: 'Tower A',
     residentType: 'Owner',
-    accessLevel: 'PERMANENT', // Can switch to TEMPORARY during verification demo
+    accessLevel: 'PERMANENT',
     avatar: null,
     phone: '+91 98765 43210',
     familyCount: 3,
     vehicleFastag: 'TS 09 FH 8120'
+  },
+  {
+    id: 'usr-res-priya',
+    name: 'Priya Verma',
+    email: 'priya.verma@example.com',
+    loginId: 'priya.verma@example.com',
+    password: 'password123',
+    role: 'RESIDENT',
+    communityId: 'comm-bhooja',
+    communityName: 'My Home Bhooja',
+    flatNumber: 'C-502',
+    tower: 'Tower C',
+    residentType: 'Owner',
+    accessLevel: 'PERMANENT',
+    avatar: null,
+    phone: '+91 98450 99112',
+    familyCount: 4,
+    vehicleFastag: 'TS 09 PV 5020'
   },
   {
     id: 'usr-prov-cool',

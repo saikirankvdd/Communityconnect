@@ -396,60 +396,72 @@ export const ResidentRegistration = ({ onRegistrationComplete, onNavigate }) => 
             </div>
           )}
 
-          {/* STEP 5: Verification Feedback Result */}
+          {/* STEP 5: Verification & Pending Admin Approval Status */}
           {currentStep === 5 && (
-            <div className="text-center space-y-4 py-2">
-              {conflictDetected ? (
-                <div>
-                  <div className="w-14 h-14 rounded-full bg-amber-100 text-amber-600 mx-auto flex items-center justify-center mb-3">
-                    <ShieldAlert className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 font-display">Occupancy Conflict Flagged</h3>
-                  <p className="text-xs text-gray-600 mt-2 leading-relaxed">
-                    Flat <strong>{flatNumber}</strong> at <strong>{selectedCommunity.name}</strong> is currently registered under outgoing resident Rahul G.
-                  </p>
-                  
-                  <div className="mt-4 p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-left text-xs space-y-1.5 text-amber-900">
-                    <div className="font-bold">Next Automated Verification Steps:</div>
-                    <div className="text-[11px] space-y-1">
-                      <div>1. Rahul received vacation confirmation prompt (Confirmed).</div>
-                      <div>2. Security Guard Ram Singh conducts physical inspection of luggage &amp; keys surrender.</div>
-                      <div>3. President reviews report and grants 5-day temporary move-in access.</div>
-                    </div>
-                  </div>
+            <div className="text-center space-y-5 py-2">
+              <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 mx-auto flex items-center justify-center border-4 border-amber-50 shadow-inner">
+                <Lock className="w-8 h-8" />
+              </div>
 
-                  <div className="mt-6 flex flex-col gap-2">
-                    <button
-                      onClick={() => onNavigate('resident')}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
-                    >
-                      Enter Resident Console (Temporary Stage)
-                    </button>
-                    <button
-                      onClick={() => onNavigate('community-admin')}
-                      className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition"
-                    >
-                      Switch to President View to Approve Access
-                    </button>
-                  </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 uppercase tracking-wide mb-2">
+                  ⏳ Registration Request Submitted
+                </span>
+                <h3 className="text-xl font-bold text-gray-900 font-display">Pending Admin Approval</h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  Your access request for <strong className="text-gray-900">{flatNumber}</strong> at <strong className="text-gray-900">{selectedCommunity.name}</strong> is awaiting review.
+                </p>
+              </div>
+
+              {/* Zero-Trust Access Policy Notice */}
+              <div className="p-4 bg-amber-50/90 rounded-2xl border border-amber-200/90 text-left text-xs space-y-2 text-amber-950">
+                <div className="flex items-center gap-2 font-bold text-amber-900">
+                  <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Portal Access Locked (Zero-Trust Security)</span>
                 </div>
-              ) : (
-                <div>
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center mb-3">
-                    <CheckCircle2 className="w-7 h-7" />
+                <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                  Temporary login access has been disabled to prevent unverified data access. Your account remains locked until the Management Committee President confirms occupancy & document clearance.
+                </p>
+                {conflictDetected && (
+                  <div className="mt-2 pt-2 border-t border-amber-200/80 text-[11px] text-amber-950 font-medium">
+                    ⚠️ <strong>Occupancy Flag:</strong> Flat {flatNumber} was previously registered under outgoing resident Rahul G. Security inspection and key surrender report will be verified by the President.
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 font-display">Account Verified!</h3>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Welcome to {selectedCommunity.name}. Full resident permissions activated.
-                  </p>
-                  <button
-                    onClick={() => onNavigate('resident')}
-                    className="mt-6 w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs"
-                  >
-                    Enter Resident Portal
-                  </button>
+                )}
+              </div>
+
+              {/* Waiting Period & SMS Alert Info */}
+              <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 text-left text-xs space-y-2">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-gray-500 font-medium">Expected Waiting Period:</span>
+                  <span className="font-bold text-gray-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200">24 – 48 Hours (2–5 Days)</span>
                 </div>
-              )}
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-gray-500 font-medium">SMS Notification Status:</span>
+                  <span className="font-bold text-emerald-700 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Enabled ({mobileNumber})
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => onNavigate('login')}
+                  className="w-full py-3 bg-gray-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Return to Login Screen</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onNavigate('community-admin')}
+                  className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>Switch to President View to Approve (Testing Sandbox)</span>
+                </button>
+              </div>
             </div>
           )}
 
