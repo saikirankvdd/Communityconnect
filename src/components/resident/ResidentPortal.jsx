@@ -2419,11 +2419,12 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
             <div className="flex flex-col gap-6">
               {/* Feed Filter Tabs */}
               <div className="flex items-center justify-between border-b border-[#eaedff] pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {[
-                    { id: 'all', label: 'All Posts' },
-                    { id: 'notices', label: 'Official Notices' },
-                    { id: 'classifieds', label: 'Classifieds & Bazaar' }
+                    { id: 'all', label: 'All Feed & Activity' },
+                    { id: 'classifieds', label: 'Marketplace & Classifieds' },
+                    { id: 'group_services', label: 'Community Group Services' },
+                    { id: 'notices', label: 'Announcements & Notices' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -2431,7 +2432,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                       onClick={() => setFeedFilter(tab.id)}
                       className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                         feedFilter === tab.id
-                          ? 'bg-[#00873a] text-white'
+                          ? 'bg-[#00873a] text-white shadow-xs'
                           : 'text-[#3e4a3d] hover:bg-[#f2f3ff]'
                       }`}
                     >
@@ -2454,8 +2455,9 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                 <div className="lg:col-span-8 flex flex-col gap-4">
                   {communityPosts
                     .filter(post => {
-                      if (feedFilter === 'notices') return post.category === 'notices' || post.type === 'POLL' || post.type === 'ANNOUNCEMENT';
-                      if (feedFilter === 'classifieds') return post.category === 'classifieds' || post.type === 'CLASSIFIED';
+                      if (feedFilter === 'notices') return post.category === 'notices' || post.type === 'POLL' || post.type === 'ANNOUNCEMENT' || post.category === 'SECURITY' || post.category === 'MAINTENANCE';
+                      if (feedFilter === 'classifieds') return post.category === 'classifieds' || post.category === 'MARKETPLACE' || post.type === 'CLASSIFIED';
+                      if (feedFilter === 'group_services') return post.category === 'group_services' || post.category === 'GROUP_SERVICE' || post.category === 'SOLO_STAFF' || post.type === 'GROUP_SERVICE';
                       return true;
                     })
                     .map(post => {
@@ -2468,8 +2470,14 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                           {/* Post Header */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${
-                                post.authorRole === 'ADMIN' ? 'bg-[#006b2c] text-white' : 'bg-sky-100 text-sky-800'
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shadow-xs text-white ${
+                                post.authorRole === 'COMMUNITY_ADMIN' || post.authorRole === 'ADMIN'
+                                  ? 'bg-[#006b2c]'
+                                  : post.authorRole === 'SERVICE_PROVIDER'
+                                  ? 'bg-amber-600'
+                                  : post.authorRole === 'SECURITY_TEAM'
+                                  ? 'bg-purple-700'
+                                  : 'bg-[#006591]'
                               }`}>
                                 {post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                               </div>
@@ -2484,17 +2492,26 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               post.type === 'POLL'
                                 ? 'bg-[#7ffc97]/60 text-[#002109]'
-                                : post.type === 'CLASSIFIED'
+                                : post.type === 'CLASSIFIED' || post.category === 'MARKETPLACE'
                                 ? 'bg-sky-100 text-sky-800'
-                                : 'bg-amber-100 text-amber-900'
+                                : post.type === 'GROUP_SERVICE' || post.category === 'GROUP_SERVICE' || post.category === 'SOLO_STAFF'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300/40'
+                                : 'bg-purple-100 text-purple-900'
                             }`}>
-                              {post.type === 'POLL' ? 'Active Poll' : post.type === 'CLASSIFIED' ? 'Classified Bazaar' : 'Announcement'}
+                              {post.type === 'POLL' ? 'Active Poll' : (post.type === 'CLASSIFIED' || post.category === 'MARKETPLACE') ? 'Classified Bazaar' : (post.type === 'GROUP_SERVICE' || post.category === 'GROUP_SERVICE' || post.category === 'SOLO_STAFF') ? 'Group Service' : 'Official Notice'}
                             </span>
                           </div>
 
                           {/* Post Body */}
                           <div className="mt-3">
-                            <h3 className="text-sm font-bold text-[#131b2e]">{post.title}</h3>
+                            <h3 className="text-sm font-bold text-[#131b2e] flex items-center justify-between gap-2">
+                              <span>{post.title}</span>
+                              {post.price && post.type !== 'CLASSIFIED' && (
+                                <span className="text-xs font-black text-[#006b2c] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0">
+                                  {post.price}
+                                </span>
+                              )}
+                            </h3>
                             <p className="text-xs text-[#3e4a3d] mt-1 whitespace-pre-line leading-relaxed">{post.content}</p>
 
                             {/* Poll Rendering if Type is POLL */}
@@ -2543,7 +2560,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                             )}
 
                             {/* Classified Media Box & Chat Button */}
-                            {post.type === 'CLASSIFIED' && (
+                            {(post.type === 'CLASSIFIED' || post.category === 'MARKETPLACE') && (
                               <div className="mt-3 flex items-center gap-3 p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff]">
                                 {post.imageUrl && (
                                   <img
@@ -2563,14 +2580,44 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                                     name: post.author,
                                     unit: post.unit,
                                     role: `Seller • ${post.title}`,
-                                    avatarBg: 'bg-sky-600',
-                                    avatarText: post.author.slice(0, 2).toUpperCase(),
+                                    avatarBg: 'bg-[#006591]',
+                                    avatarText: post.author.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
                                     initialMessage: `Hi Arjun! Yes, ${post.title} is available for inspection at ${post.unit}. When would you like to drop by?`
                                   })}
                                   className="px-3 py-1.5 bg-[#006591] hover:bg-[#005174] text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs shrink-0"
                                 >
                                   <span className="material-symbols-outlined text-sm">chat</span>
                                   <span>Chat with Seller</span>
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Group Service & Staff Offerings Callout Box */}
+                            {(post.type === 'GROUP_SERVICE' || post.category === 'GROUP_SERVICE' || post.category === 'SOLO_STAFF') && (
+                              <div className="mt-3 flex items-center justify-between gap-3 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200">
+                                <div className="flex-1 flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded bg-amber-200 text-amber-900 font-bold text-[10px] uppercase tracking-wider">
+                                      {post.category === 'SOLO_STAFF' ? 'Verified Staff' : 'Group Service Drive'}
+                                    </span>
+                                    {post.price && <span className="text-sm font-black text-[#006b2c]">{post.price}</span>}
+                                  </div>
+                                  <span className="text-[11px] text-amber-950 mt-1 font-medium">Provider / Staff: {post.author} • {post.unit}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => openSellerChat({
+                                    name: post.author,
+                                    unit: post.unit,
+                                    role: `Service Provider • ${post.title}`,
+                                    avatarBg: 'bg-amber-600',
+                                    avatarText: (post.author || 'SP').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+                                    initialMessage: `Hello! I would like to inquire about "${post.title}". Are slots currently available?`
+                                  })}
+                                  className="px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition shadow-2xs shrink-0"
+                                >
+                                  <span className="material-symbols-outlined text-sm">chat</span>
+                                  <span>Chat with Provider</span>
                                 </button>
                               </div>
                             )}
@@ -2592,7 +2639,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                             <button
                               type="button"
                               onClick={() => handleToggleComments(post.id)}
-                              className="flex items-center gap-1.5 hover:text-[#006b2c] cursor-pointer px-2 py-1 rounded-lg hover:bg-slate-100 font-semibold"
+                              className="flex items-center gap-1.5 hover:text-[#006b2c] cursor-pointer px-2 py-1 rounded-lg hover:bg-slate-100 font-semibold text-[#006b2c]"
                             >
                               <span className="material-symbols-outlined text-base">comment</span>
                               <span>{commentCount} Comment{commentCount === 1 ? '' : 's'}</span>
@@ -2605,20 +2652,31 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                           {/* Dynamic Comments Thread Section */}
                           {areCommentsOpen && (
                             <div className="mt-3 pt-3 border-t border-dashed border-[#eaedff] bg-slate-50/70 p-3 rounded-xl">
-                              <div className="space-y-2 mb-3">
+                              <div className="space-y-2.5 mb-3">
                                 {commentCount === 0 ? (
                                   <p className="text-[11px] text-gray-500 italic">No comments yet. Be the first to share your thoughts!</p>
                                 ) : (
                                   post.comments.map(c => (
-                                    <div key={c.id} className="p-2.5 rounded-lg bg-white border border-slate-200 text-xs shadow-2xs">
-                                      <div className="flex items-center justify-between mb-0.5">
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="font-bold text-[#131b2e]">{c.author}</span>
-                                          <span className="text-[10px] text-gray-500">({c.unit})</span>
+                                    <div key={c.id} className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs shadow-2xs">
+                                      <div className="flex items-start gap-2.5">
+                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 text-white ${
+                                          c.role === 'COMMUNITY_ADMIN' || c.role === 'ADMIN' ? 'bg-[#006b2c]' :
+                                          c.role === 'SERVICE_PROVIDER' ? 'bg-amber-600' :
+                                          c.role === 'SECURITY_TEAM' ? 'bg-purple-700' : 'bg-[#006591]'
+                                        }`}>
+                                          {(c.author || 'A').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                         </div>
-                                        <span className="text-[10px] text-gray-400">{c.timestamp}</span>
+                                        <div className="flex-1">
+                                          <div className="flex items-center justify-between mb-0.5">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                              <span className="font-bold text-[#131b2e]">{c.author}</span>
+                                              {c.unit && <span className="text-[10px] text-gray-500">({c.unit})</span>}
+                                            </div>
+                                            <span className="text-[10px] text-gray-400">{c.timestamp || 'Recent'}</span>
+                                          </div>
+                                          <p className="text-gray-700 text-xs mt-0.5 leading-relaxed">{c.text}</p>
+                                        </div>
                                       </div>
-                                      <p className="text-gray-700 text-xs mt-0.5">{c.text}</p>
                                     </div>
                                   ))
                                 )}

@@ -813,111 +813,261 @@ export const INITIAL_ADMIN_INVITATIONS = [
 
 export const INITIAL_COMMUNITY_POSTS = [
   {
-    id: 'post-1',
+    id: 'post-mkt-1',
     communityId: 'comm-bhooja',
-    author: 'Elena Rostova (Estate President)',
-    authorRole: 'COMMUNITY_ADMIN',
-    title: 'Swimming Pool Routine Maintenance & Water Treatment',
-    content: 'The Olympic and kids pools will remain closed for chemical shock treatment and filtration overhaul on 20th Sept (06:00 AM - 04:00 PM). Normal access resumes for the evening swim session.',
-    type: 'ANNOUNCEMENT',
-    category: 'MAINTENANCE',
-    timestamp: '2 hours ago',
-    pinned: true,
-    isPinned: true,
-    likes: 42,
+    author: 'Arjun Kumar',
+    authorRole: 'RESIDENT',
+    unit: 'Flat A-1204',
+    title: 'Pre-owned Herman Miller Ergonomic Mesh Office Chair (Mint Condition)',
+    content: 'Selling my Herman Miller Aeron Ergonomic Mesh Chair. Fully adjustable lumbar support, 3D armrests, and quiet polyurethane casters. Ideal for WFH. Purchased 8 months ago, selling because I am downsizing my home office setup.',
+    price: '₹18,500',
+    type: 'CLASSIFIED',
+    category: 'MARKETPLACE',
+    timestamp: '30 mins ago',
+    pinned: false,
+    isPinned: false,
+    likes: 18,
     commentsCount: 3,
     comments: [
       {
-        id: 'c-101',
-        author: 'Dr. Ananya Roy',
-        unit: 'Flat B-1102',
+        id: 'c-m101',
+        author: 'Priya Verma',
+        unit: 'Flat C-502',
         role: 'RESIDENT',
-        text: 'Will the baby pool also be refilled with heated water before Saturday morning classes?',
-        timestamp: '1 hour ago'
+        text: 'Hi Arjun! Is this chair still available for inspection at Flat A-1204?',
+        timestamp: '25 mins ago'
       },
       {
-        id: 'c-102',
-        author: 'Elena Rostova (Estate President)',
-        unit: 'MC Office',
+        id: 'c-m102',
+        author: 'Arjun Kumar',
+        unit: 'Flat A-1204',
+        role: 'RESIDENT',
+        text: 'Hi Priya! Yes, absolutely. You can visit Tower A Flat 1204 today evening post 6:00 PM to try it out.',
+        timestamp: '15 mins ago'
+      },
+      {
+        id: 'c-m103',
+        author: 'Priya Verma',
+        unit: 'Flat C-502',
+        role: 'RESIDENT',
+        text: 'Awesome! Will drop by around 6:30 PM. Thank you!',
+        timestamp: '5 mins ago'
+      }
+    ]
+  },
+  {
+    id: 'post-mkt-2',
+    communityId: 'comm-bhooja',
+    author: 'Priya Verma',
+    authorRole: 'RESIDENT',
+    unit: 'Flat C-502',
+    title: 'DeLonghi Dedica Deluxe Espresso & Cappuccino Coffee Machine',
+    content: 'Selling my 15-bar Italian pump DeLonghi coffee maker with steam milk frother wand and tamper. Perfect working condition, includes stainless steel milk pitcher.',
+    price: '₹12,000',
+    type: 'CLASSIFIED',
+    category: 'MARKETPLACE',
+    timestamp: '1 hour ago',
+    pinned: false,
+    isPinned: false,
+    likes: 14,
+    commentsCount: 2,
+    comments: [
+      {
+        id: 'c-m201',
+        author: 'S. Venkat Reddy (MC President)',
+        unit: 'Management Committee',
         role: 'COMMUNITY_ADMIN',
-        text: 'Yes Dr. Ananya, the heat pumps will be turned on at 4 PM post chemical shock testing.',
+        text: 'Hi Priya, does it include the portafilter basket for double shots?',
         timestamp: '45 mins ago'
       },
       {
-        id: 'c-103',
-        author: 'Karan Mehra',
-        unit: 'Flat A-804',
+        id: 'c-m202',
+        author: 'Priya Verma',
+        unit: 'Flat C-502',
         role: 'RESIDENT',
-        text: 'Thanks for the advance notification MC team! Appreciate the timely maintenance.',
+        text: 'Yes Mr. President, single shot, double shot, and ESE pod filters are all included!',
+        timestamp: '30 mins ago'
+      }
+    ]
+  },
+  {
+    id: 'post-grp-1',
+    communityId: 'comm-bhooja',
+    author: 'Suresh Varma (CoolingPro AC Solutions)',
+    authorRole: 'SERVICE_PROVIDER',
+    unit: 'AC Service Contractor',
+    title: '🤝 Society Group AC Deep Cleaning & Chemical Wash Drive (Save 40%)',
+    content: 'CoolingPro AC Solutions has launched a pre-monsoon group servicing drive for My Home Bhooja! Regular price ₹1,499 per unit, unlocked group price is ₹899 per unit when 15+ flats join. 16/20 slots already filled!',
+    price: '₹899 / Unit (Save 40%)',
+    type: 'GROUP_SERVICE',
+    category: 'GROUP_SERVICE',
+    timestamp: '2 hours ago',
+    pinned: true,
+    isPinned: true,
+    likes: 29,
+    commentsCount: 3,
+    comments: [
+      {
+        id: 'c-g101',
+        author: 'Arjun Kumar',
+        unit: 'Flat A-1204',
+        role: 'RESIDENT',
+        text: 'Just registered 3 AC units for Flat A-1204! Glad we hit the 15-unit tier.',
+        timestamp: '1 hour ago'
+      },
+      {
+        id: 'c-g102',
+        author: 'Priya Verma',
+        unit: 'Flat C-502',
+        role: 'RESIDENT',
+        text: 'Count me in for 2 split ACs in Tower C! What date is the technician drive scheduled?',
+        timestamp: '45 mins ago'
+      },
+      {
+        id: 'c-g103',
+        author: 'Suresh Varma (CoolingPro AC)',
+        unit: 'Service Provider',
+        role: 'SERVICE_PROVIDER',
+        text: 'Hi Priya! Saturday drive starts at 9 AM. Our team will verify gate OTP and service Tower A & C first.',
         timestamp: '20 mins ago'
       }
     ]
   },
   {
-    id: 'post-2',
+    id: 'post-grp-2',
     communityId: 'comm-bhooja',
-    author: 'Saket Reddy',
-    authorRole: 'RESIDENT',
-    unit: 'Flat C-402',
-    title: 'Clubhouse Weekend Gathering & Cultural Night',
-    content: 'Beautiful evening with neighbors at the central clubhouse amphitheatre! Special thanks to the cultural committee for live acoustic music and refreshments.',
-    imageUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80',
-    type: 'DISCUSSION',
-    category: 'EVENT',
+    author: 'Sunita Devi (Verified Home Cook)',
+    authorRole: 'SERVICE_PROVIDER',
+    unit: 'Gate OTP Access • Tower A & B',
+    title: '👩‍🍳 Authentic North & South Indian Home Cooking (Evening Slot Open)',
+    content: 'Police verified and estate background-cleared home cook available for daily breakfast, lunch, or dinner preparation. Specialized in North Indian thali, South Indian tiffin, and diabetic diet cooking.',
+    price: '₹8,000 / Month',
+    type: 'GROUP_SERVICE',
+    category: 'SOLO_STAFF',
     timestamp: '3 hours ago',
     pinned: false,
     isPinned: false,
-    likes: 24,
+    likes: 22,
     commentsCount: 2,
     comments: [
       {
-        id: 'c-201',
-        author: 'Pooja Hegde',
-        unit: 'Flat D-503',
+        id: 'c-g201',
+        author: 'Priya Verma',
+        unit: 'Flat C-502',
         role: 'RESIDENT',
-        text: 'It was fantastic! When is the next cultural committee gathering planned for the kids?',
+        text: 'Sunita ji, are you available for the 6 PM - 8 PM evening dinner slot in Tower C?',
         timestamp: '2 hours ago'
       },
       {
-        id: 'c-202',
-        author: 'Saket Reddy',
-        unit: 'Flat C-402',
-        role: 'RESIDENT',
-        text: 'We are planning a Dandiya night during Navratri week! Announcement coming soon.',
+        id: 'c-g202',
+        author: 'Sunita Devi (Home Cook)',
+        unit: 'Solo Staff',
+        role: 'SERVICE_PROVIDER',
+        text: 'Namaste Priya ji! Yes, 6 PM - 8 PM slot is available for Flat C-502. Gate OTP clearance is active.',
         timestamp: '1 hour ago'
       }
     ]
   },
   {
-    id: 'post-3',
+    id: 'post-grp-3',
     communityId: 'comm-bhooja',
-    author: 'Estate Operations Team',
-    authorRole: 'COMMUNITY_ADMIN',
-    title: 'Dussehra & Diwali Lighting Decorations Across Boulevard',
-    content: 'Tower facades and landscaped boulevard lighting installation will commence tomorrow. Please avoid parking over landscaped kerbs during hoist crane movement.',
+    author: 'Lakshmi Bai (Verified Maid)',
+    authorRole: 'SERVICE_PROVIDER',
+    unit: 'Biometric Access • Tower C',
+    title: '🧹 Professional Daily Housekeeping, Mopping & Utensil Care',
+    content: 'Verified housekeeper maid with biometric facial recognition gate access at Gate 1. Punctual, hygienic, and highly rated by 12 society residents.',
+    price: '₹5,000 / Month',
+    type: 'GROUP_SERVICE',
+    category: 'SOLO_STAFF',
+    timestamp: '4 hours ago',
+    pinned: false,
+    isPinned: false,
+    likes: 31,
+    commentsCount: 1,
+    comments: [
+      {
+        id: 'c-g301',
+        author: 'Arjun Kumar',
+        unit: 'Flat A-1204',
+        role: 'RESIDENT',
+        text: 'Lakshmi Bai cleans our Flat A-1204 impeccably every morning! Very trustworthy.',
+        timestamp: '3 hours ago'
+      }
+    ]
+  },
+  {
+    id: 'post-sec-1',
+    communityId: 'comm-bhooja',
+    author: 'Havaldar Ram Singh (Gate 1 Guard)',
+    authorRole: 'SECURITY_TEAM',
+    unit: 'Gate 1 Terminal',
+    title: '🛡️ Gate 1 FastTag ANPR System & Delivery OTP Register Rules',
+    content: 'All resident vehicles must ensure FastTag windshield stickers are clean for automated boom barrier clearance. Delivery partners (Zomato/Swiggy/Amazon) will only be granted entry upon resident OTP validation.',
     type: 'ANNOUNCEMENT',
-    category: 'GENERAL',
+    category: 'SECURITY',
     timestamp: '5 hours ago',
     pinned: false,
     isPinned: false,
-    likes: 38,
+    likes: 45,
     commentsCount: 2,
     comments: [
       {
-        id: 'c-301',
-        author: 'Vikram Singhania',
-        unit: 'Penthouse P-02',
-        role: 'RESIDENT',
-        text: 'Looks wonderful every year. Are Tower D terrace parapets also included in this phase?',
-        timestamp: '3 hours ago'
+        id: 'c-s101',
+        author: 'S. Venkat Reddy (MC President)',
+        unit: 'Management Committee',
+        role: 'COMMUNITY_ADMIN',
+        text: 'Thank you Ram Singh for enforcing zero-trust gate security protocols across both gates.',
+        timestamp: '4 hours ago'
       },
       {
-        id: 'c-302',
-        author: 'Estate Operations Team',
-        unit: 'Facility Command Desk',
+        id: 'c-s102',
+        author: 'Devashish Sen (Platform HQ)',
+        unit: 'CommunityConnect HQ',
+        role: 'PLATFORM_ADMIN',
+        text: 'Great operational discipline by Havaldar Ram Singh! ANPR barrier logs are synced to HQ audit.',
+        timestamp: '3 hours ago'
+      }
+    ]
+  },
+  {
+    id: 'post-1',
+    communityId: 'comm-bhooja',
+    author: 'S. Venkat Reddy (Estate President)',
+    authorRole: 'COMMUNITY_ADMIN',
+    unit: 'Management Committee Office',
+    title: '🏊 Swimming Pool Routine Maintenance & Solar Water Heating Upgrade',
+    content: 'The Olympic and kids pools will remain closed for chemical shock treatment and filtration overhaul on 20th Sept (06:00 AM - 04:00 PM). Normal access resumes for the evening swim session.',
+    type: 'ANNOUNCEMENT',
+    category: 'MAINTENANCE',
+    timestamp: '6 hours ago',
+    pinned: false,
+    isPinned: false,
+    likes: 52,
+    commentsCount: 3,
+    comments: [
+      {
+        id: 'c-101',
+        author: 'Arjun Kumar',
+        unit: 'Flat A-1204',
+        role: 'RESIDENT',
+        text: 'Will the heated pumps be active for the evening 6 PM session?',
+        timestamp: '5 hours ago'
+      },
+      {
+        id: 'c-102',
+        author: 'S. Venkat Reddy (Estate President)',
+        unit: 'MC Office',
         role: 'COMMUNITY_ADMIN',
-        text: 'Yes Mr. Singhania, all four towers plus the main clubhouse will have synchronized warm-white architectural LED wash.',
-        timestamp: '2 hours ago'
+        text: 'Yes Arjun, solar heat pumps will be switched on at 4 PM post chemical testing.',
+        timestamp: '4 hours ago'
+      },
+      {
+        id: 'c-103',
+        author: 'Priya Verma',
+        unit: 'Flat C-502',
+        role: 'RESIDENT',
+        text: 'Thank you President Reddy and MC team for keeping facilities clean!',
+        timestamp: '3 hours ago'
       }
     ]
   }
