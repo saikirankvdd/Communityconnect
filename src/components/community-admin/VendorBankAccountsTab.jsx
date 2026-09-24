@@ -4,12 +4,17 @@ export const VendorBankAccountsTab = ({
   treasuryData,
   inflowLedger = [],
   amcContracts = [],
+  currentUser,
+  currentCommunity,
   onOpenPayout,
   onDepositCash,
   onReconcileInflows,
   isAuditingInflows,
   showToast
 }) => {
+  const adminName = currentUser?.name || 'Elena Rostova';
+  const communityName = currentCommunity?.name || currentUser?.communityName || 'Oakridge Heights';
+
   // Account selection state: 'ALL' | 'OPERATING_BANK' | 'SINKING_FUND' | 'CASH_VAULT'
   const [selectedAccount, setSelectedAccount] = useState('ALL');
   const [transactionTypeFilter, setTransactionTypeFilter] = useState('ALL'); // 'ALL' | 'OUTFLOWS' | 'INFLOWS'
@@ -166,7 +171,7 @@ export const VendorBankAccountsTab = ({
               </span>
             </div>
             <p className="text-xs text-gray-300 mt-1 max-w-2xl leading-relaxed">
-              Official banking command center for Oakridge Heights Co-Op Society. Check available cash on each bank account, audit resident maintenance cash inflows, and disburse corporate payouts to vendors with President dual-key authorization.
+              Official banking command center for {communityName} Co-Op Society. Check available cash on each bank account, audit resident maintenance cash inflows, and disburse corporate payouts to vendors with President dual-key authorization.
             </p>
           </div>
         </div>

@@ -24,6 +24,24 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
   const [currentCommunity, setCurrentCommunity] = useState(() => {
     return currentUser?.communityId ? communityApi.getCommunityById(currentUser.communityId) : null;
   });
+
+  const adminName = currentUser?.name || 'Elena Rostova';
+  const adminFirstName = adminName.split(' ')[0] || 'Admin';
+  const communityName = currentCommunity?.name || currentUser?.communityName || 'Oakridge Heights';
+  const totalUnits = currentCommunity?.totalUnits || 420;
+  const towersCount = currentCommunity?.towers || 4;
+  const adminTitle = currentUser?.title || (currentUser?.role === 'COMMUNITY_ADMIN' ? 'Estate President' : 'Management Committee');
+  const adminFlat = currentUser?.flatNumber || 'Management Suite';
+
+  useEffect(() => {
+    if (currentUser?.communityId) {
+      const comm = communityApi.getCommunityById(currentUser.communityId);
+      if (comm) {
+        setCurrentCommunity(comm);
+      }
+    }
+  }, [currentUser]);
+
   const isCommunityFrozen = currentCommunity && currentCommunity.status === 'FROZEN';
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSecurityVerifModal, setShowSecurityVerifModal] = useState(false);
@@ -1362,8 +1380,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
             <div className="flex items-center gap-2 bg-[#f2f3ff] px-3.5 py-1.5 rounded-xl">
               <span className="material-symbols-outlined text-[#006b2c] text-lg">apartment</span>
               <div className="flex flex-col text-left">
-                <span className="font-semibold text-xs text-[#131b2e] leading-tight">Oakridge Heights • Unit B-402</span>
-                <span className="text-[10px] text-[#6e7b6c] leading-tight">Tower A (Primary Flat)</span>
+                <span className="font-semibold text-xs text-[#131b2e] leading-tight">{communityName}</span>
+                <span className="text-[10px] text-[#6e7b6c] leading-tight">{adminFlat} ({adminTitle})</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e2e7ff]">
@@ -1374,7 +1392,7 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => showToast('All 53 tenant heartbeats responding normally.', 'info')}
+              onClick={() => showToast('All tenant heartbeats responding normally.', 'info')}
               className="relative p-2 rounded-full text-[#6e7b6c] hover:bg-[#f2f3ff] hover:text-[#131b2e] transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-xl">notifications</span>
@@ -1382,14 +1400,20 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
             </button>
 
             <div className="flex items-center gap-2.5 pl-2 bg-[#f2f3ff] p-1.5 pr-3 rounded-full">
-              <img
-                alt="Elena Rostova"
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-[#006b2c]/30"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiZb7a5TxSdzxLXDfoYxeTXGxcGC8hnG6bHetSKFZgpL4-bpz7i7UcleZhlUQmzzDjjCllPoOYsYjD6qib4tjezLetvaFGOIYDmhFR3dX01_frUY1buu_pbeGq1dLLE4Z84gazsTQSr6DumJFOGT6TeU0kxkkpZNoBlvf9PtG_OXSk45brJb00fARO6BP90GLDHpD35de_CQIrJB96Dz__1F_upJd5UJSrYzNqH8KrDp0MDXXHYGyFyA"
-              />
+              {currentUser?.avatar ? (
+                <img
+                  alt={adminName}
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-[#006b2c]/30"
+                  src={currentUser.avatar}
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#006b2c] text-white flex items-center justify-center font-bold text-xs">
+                  {adminName.charAt(0)}
+                </div>
+              )}
               <div className="flex flex-col text-left">
-                <span className="font-bold text-xs text-[#131b2e] leading-tight">Elena Rostova</span>
-                <span className="text-[10px] text-[#006b2c] font-semibold leading-tight">Estate President</span>
+                <span className="font-bold text-xs text-[#131b2e] leading-tight">{adminName}</span>
+                <span className="text-[10px] text-[#006b2c] font-semibold leading-tight">{adminTitle}</span>
               </div>
             </div>
 
@@ -1419,13 +1443,13 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                         Executive Management
                       </span>
                       <span className="text-[#6e7b6c]">•</span>
-                      <span className="text-xs text-[#6e7b6c] font-medium">Estate President &amp; MC Portal</span>
+                      <span className="text-xs text-[#6e7b6c] font-medium">{adminTitle} &amp; MC Portal</span>
                     </div>
                     <h1 className="text-2xl font-bold text-[#131b2e] tracking-tight">
-                      Welcome back, Elena • Oakridge Heights Executive Dashboard
+                      Welcome back, {adminFirstName} • {communityName} Executive Dashboard
                     </h1>
                     <p className="text-xs text-[#6e7b6c]">
-                      Real-time surveillance, financial reconciliation &amp; facility automation across Towers A, B, C &amp; D (420 residential suites).
+                      Real-time surveillance, financial reconciliation &amp; facility automation across {towersCount} Towers ({totalUnits} residential suites).
                     </p>
                   </div>
 
@@ -1889,7 +1913,7 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-sm text-[#131b2e]">
                                     {selectedTowerFilter === 'ALL'
-                                      ? 'Oakridge Heights - All Towers Combined (420 Units)'
+                                      ? `${communityName} - All Towers Combined (${totalUnits} Units)`
                                       : selectedTowerFilter === 'TOWER_A'
                                       ? 'Tower A - High-Rise Executive Suites (112 Units)'
                                       : selectedTowerFilter === 'TOWER_B'
@@ -3648,7 +3672,7 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                                 <div className="flex items-center gap-2 pt-1">
                                   <input
                                     type="text"
-                                    placeholder="Write an official response as Elena Rostova (Estate President)..."
+                                    placeholder={`Write an official response as ${adminName} (${adminTitle})...`}
                                     value={commentInputs[post.id] || ''}
                                     onChange={(e) =>
                                       setCommentInputs((prev) => ({
@@ -3786,7 +3810,7 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-[#131b2e]">Upcoming Vendor &amp; Utility Invoices (Authorized Signatory: Elena Rostova)</h2>
+                        <h2 className="text-base font-bold text-[#131b2e]">Upcoming Vendor &amp; Utility Invoices (Authorized Signatory: {adminName})</h2>
                         <span className="px-2 py-0.5 rounded-full bg-[#ffddb8] text-[#2a1700] text-[10px] font-bold">
                           {treasuryData?.pendingUtilityBills?.filter((b) => b.status === 'PENDING')?.length || 4} Pending Approval
                         </span>
@@ -4614,6 +4638,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                   treasuryData={treasuryData}
                   inflowLedger={inflowLedger}
                   amcContracts={amcContracts}
+                  currentUser={currentUser}
+                  currentCommunity={currentCommunity}
                   onOpenPayout={handleOpenPayoutForVendor}
                   onDepositCash={() => setTreasuryPaymentModal({ isOpen: true, mode: 'DEPOSIT_CASH', billData: null, unitData: null })}
                   onReconcileInflows={handleReconcileInflows}
@@ -4671,6 +4697,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
           billData={treasuryPaymentModal.billData}
           unitData={treasuryPaymentModal.unitData}
           treasuryData={treasuryData}
+          currentUser={currentUser}
+          currentCommunity={currentCommunity}
           onClose={() =>
             setTreasuryPaymentModal({
               isOpen: false,
@@ -4708,6 +4736,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
           isOpen={showExecutivePrintModal}
           onClose={() => setShowExecutivePrintModal(false)}
           treasuryData={treasuryData}
+          currentUser={currentUser}
+          currentCommunity={currentCommunity}
           showToast={showToast}
         />
 
@@ -4809,7 +4839,7 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                     <input
                       type="text"
                       readOnly
-                      value="Elena Rostova (President)"
+                      value={`${adminName} (${adminTitle})`}
                       className="w-full p-2.5 bg-gray-100 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600"
                     />
                   </div>
@@ -4899,6 +4929,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
           prefilledInvoiceRef={payoutPrefill.invoiceRef}
           prefilledSourceAccount={payoutPrefill.sourceAccount}
           treasuryData={treasuryData}
+          currentUser={currentUser}
+          currentCommunity={currentCommunity}
           onClose={() => setShowPresidentPayoutModal(false)}
           onConfirmPayout={handleExecutePresidentPayout}
           showToast={showToast}

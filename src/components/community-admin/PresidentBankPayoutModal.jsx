@@ -7,10 +7,14 @@ export const PresidentBankPayoutModal = ({
   prefilledInvoiceRef,
   prefilledSourceAccount,
   treasuryData,
+  currentUser,
+  currentCommunity,
   onClose,
   onConfirmPayout,
   showToast
 }) => {
+  const adminName = currentUser?.name || 'Elena Rostova';
+  const adminTitle = currentUser?.title || 'President';
   const [sourceAccount, setSourceAccount] = useState(prefilledSourceAccount || 'OPERATING_BANK');
   const [vendorName, setVendorName] = useState(prefilledPayee || 'Otis Elevators India Pvt Ltd');
   const [category, setCategory] = useState('VENDOR_AMC');
@@ -70,7 +74,7 @@ export const PresidentBankPayoutModal = ({
         invoiceRef,
         payoutMode,
         notes,
-        authorizedBy: 'Elena Rostova (President - Board Signatory 1)'
+        authorizedBy: `${adminName} (${adminTitle} - Board Signatory 1)`
       });
       setIsProcessing(false);
     }, 450);
@@ -313,7 +317,7 @@ export const PresidentBankPayoutModal = ({
               />
               <div>
                 <span className="font-bold block">
-                  I, Elena Rostova (Apartment President), authorize this bank disbursal.
+                  I, {adminName} ({adminTitle}), authorize this bank disbursal.
                 </span>
                 <span className="text-[11px] text-gray-600 block mt-0.5">
                   This transaction is electronically timestamped and committed to the Society Treasury Ledger under Bye-Law Section 42(A).

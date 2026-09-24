@@ -6,9 +6,15 @@ export const ExecutiveReportPrintModal = ({
   treasuryData,
   monthlyData = [],
   towerData = [],
+  currentUser,
+  currentCommunity,
   showToast = () => {}
 }) => {
   if (!isOpen) return null;
+
+  const adminName = currentUser?.name || 'Elena Rostova';
+  const communityName = currentCommunity?.name || currentUser?.communityName || 'Oakridge Heights';
+  const communityInitials = communityName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'OH';
 
   const handleTriggerPrint = () => {
     window.print();
@@ -59,14 +65,14 @@ export const ExecutiveReportPrintModal = ({
         <div className="flex items-start justify-between border-b-2 border-[#131b2e] pb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-[#006b2c] text-white flex items-center justify-center font-bold text-xl shrink-0 print:border print:border-black">
-              OH
+              {communityInitials}
             </div>
             <div>
               <h1 className="text-xl font-bold text-[#131b2e] tracking-tight uppercase">
-                Oakridge Heights Co-Operative Housing Society Ltd.
+                {communityName} Co-Operative Housing Society Ltd.
               </h1>
               <p className="text-xs text-[#6e7b6c]">
-                Reg. No. CHS/BLR/2019/KA/4091 • Sy No. 42/1, Varthur Main Road, Whitefield, Bengaluru - 560066
+                Reg. No. CHS/{currentCommunity?.city ? currentCommunity.city.slice(0, 3).toUpperCase() : 'BLR'}/2023/KA/4091 • {currentCommunity?.area || 'Main Corridor'}, {currentCommunity?.city || 'Metro'}
               </p>
               <span className="text-[11px] font-semibold text-[#006591] block mt-0.5">
                 Executive Management Committee Monthly Financial &amp; Operations Audit
@@ -76,7 +82,7 @@ export const ExecutiveReportPrintModal = ({
           <div className="text-right text-xs">
             <span className="font-bold text-[#131b2e] block">Audit Cycle: FY 2024–25</span>
             <span className="text-[#6e7b6c] block">Date: {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            <span className="text-[10px] font-mono text-[#006b2c] block mt-0.5">DOC-REF: OH-AUD-FY25-M09</span>
+            <span className="text-[10px] font-mono text-[#006b2c] block mt-0.5">DOC-REF: {communityInitials}-AUD-FY25-M09</span>
           </div>
         </div>
 
@@ -177,9 +183,9 @@ export const ExecutiveReportPrintModal = ({
         <div className="pt-8 mt-4 border-t border-[#eaedff] flex items-end justify-between text-xs">
           <div className="flex flex-col items-center">
             <div className="w-40 border-b border-gray-400 pb-1 text-center font-serif italic text-gray-700">
-              Elena Rostova
+              {adminName}
             </div>
-            <span className="font-bold text-[#131b2e] mt-1">Elena Rostova</span>
+            <span className="font-bold text-[#131b2e] mt-1">{adminName}</span>
             <span className="text-[10px] text-[#6e7b6c]">Estate President &amp; Signatory</span>
           </div>
 

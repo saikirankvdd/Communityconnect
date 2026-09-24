@@ -6,6 +6,8 @@ export const TreasuryPaymentModal = ({
   billData = null,
   unitData = null,
   treasuryData = null,
+  currentUser,
+  currentCommunity,
   onClose,
   onConfirmUtilityPayment,
   onConfirmDeposit,
@@ -14,10 +16,13 @@ export const TreasuryPaymentModal = ({
 }) => {
   if (!isOpen) return null;
 
+  const adminName = currentUser?.name || 'Elena Rostova';
+  const adminTitle = currentUser?.title || 'Estate President';
+
   // State for Utility Payment
   const [paymentMode, setPaymentMode] = useState('HDFC_NET_BANKING');
   const [utrNumber, setUtrNumber] = useState(`UTR-HDFC-${Math.floor(1000000 + Math.random() * 9000000)}`);
-  const [authSignatory, setAuthSignatory] = useState('Elena Rostova (Estate President)');
+  const [authSignatory, setAuthSignatory] = useState(`${adminName} (${adminTitle})`);
 
   // State for Cash Deposit to Bank
   const [depositAmount, setDepositAmount] = useState(
