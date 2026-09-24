@@ -209,6 +209,21 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       setLoginError(msg || 'Authentication failed. Please check credentials.');
     }
   };
+  // Scroll to onboarding engine
+  const scrollToConnect = () => {
+    const el = document.getElementById('connect-onboarding-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Scroll to 5 Ws
+  const scrollToAbout = () => {
+    const el = document.getElementById('five-ws-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   // Quick 1-Click Login for the 5 Members
   const handleQuickLogin = async (email, password = 'password123') => {
