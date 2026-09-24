@@ -86,7 +86,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'CommunityConnect HQ',
       email: 'admin@communityconnect.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'Multi-Community Governance & Licensing'
     },
     {
@@ -99,7 +99,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'My Home Bhooja',
       email: 'president.bhooja@communityconnect.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'RWA Administration, Finances & Approvals'
     },
     {
@@ -112,7 +112,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'My Home Bhooja',
       email: 'arjun.kumar@example.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'Visitor FASTag, Group Demands & Bookings'
     },
     {
@@ -125,7 +125,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'My Home Bhooja',
       email: 'security.gate1@communityconnect.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'ANPR Boom Barrier & Gate Register'
     },
     {
@@ -138,7 +138,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'AC & Appliance Maintenance',
       email: 'coolingpro.service@example.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'Resident Group Pool Jobs & Dispatch'
     },
     {
@@ -151,7 +151,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'Gate OTP Access • Tower A & B',
       email: 'sunita.cook@example.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'Dedicated Daily Cooking & Kitchen Shift'
     },
     {
@@ -164,7 +164,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       org: 'Biometric Access • Tower C',
       email: 'lakshmi.maid@example.com',
       password: 'password123',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
+      avatar: null,
       scope: 'Daily Housekeeping & Floor Cleaning'
     }
   ];
@@ -1698,11 +1698,9 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                     className="w-full text-left p-2 rounded-xl bg-gray-50/80 hover:bg-emerald-50/60 border border-gray-200/80 hover:border-emerald-300 transition flex items-center justify-between gap-2.5 cursor-pointer group"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <img
-                        src={member.avatar}
-                        alt={member.name}
-                        className="w-7 h-7 rounded-lg object-cover shrink-0 ring-1 ring-gray-200"
-                      />
+                      <div className="w-7 h-7 rounded-lg bg-[#006b2c] text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs uppercase">
+                        {member.name.charAt(0)}
+                      </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-gray-900 group-hover:text-[#006b2c] transition truncate">
