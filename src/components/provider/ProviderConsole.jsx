@@ -2073,13 +2073,13 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-1">
-                <div className="font-bold flex items-center gap-1.5 text-amber-800">
-                  <span className="material-symbols-outlined text-sm">info</span>
-                  <span>Owner Approval Required</span>
+              <div className="p-3.5 rounded-2xl bg-[#f2f3ff] border border-[#dae2fd] text-[11px] text-[#3e4a3d] space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-[#006b2c]">
+                  <span className="material-symbols-outlined text-sm">hourglass_bottom</span>
+                  <span>Resident Review Workflow</span>
                 </div>
-                <p>
-                  Submitting your application &amp; passcode will <strong>NOT</strong> immediately allot you for this flat. The flat owner will be notified to review your profile, contact you, and approve your work allotment.
+                <p className="leading-relaxed text-[#6e7b6c]">
+                  Submitting your passcode sends your profile directly to the flat owner. Your daily gate pass and shift allotment will be activated once the resident confirms your application.
                 </p>
               </div>
 
@@ -2153,8 +2153,9 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
-                ℹ️ Submitting this passcode will send your application to the flat owner ({enterFlatNumberInput}). You will receive a popup notification and work allotment once the owner approves.
+              <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#dae2fd] text-[11px] text-[#3e4a3d] leading-relaxed flex items-start gap-2">
+                <span className="material-symbols-outlined text-sm text-[#006b2c] mt-0.5 shrink-0">info</span>
+                <span>Submitting this passcode transmits your profile to <strong className="text-[#131b2e]">{enterFlatNumberInput || 'Flat A-1204'}</strong> for resident review. Daily gate entry pass activates upon resident approval.</span>
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
@@ -2218,17 +2219,22 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2 text-xs">
-              <div className="font-bold flex items-center gap-2 text-amber-400">
-                <span className="material-symbols-outlined text-base">info</span>
-                <span>Work Allotment Notice</span>
+            <div className="p-4 rounded-2xl bg-[#f2f3ff] border border-[#dae2fd] space-y-2.5 text-xs">
+              <div className="flex items-center gap-2 text-[#006b2c] font-bold">
+                <span className="material-symbols-outlined text-base">hourglass_top</span>
+                <span>Application Under Resident Review</span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                You have <strong>NOT</strong> been directly allotted to this flat yet. The flat owner will review your application, verify your passcode, and contact you directly at <strong className="text-white">{applicationSentModalData.phone}</strong>.
+              <p className="text-[#3e4a3d] text-[11px] leading-relaxed">
+                Your passcode <strong className="text-[#131b2e] font-mono">#{applicationSentModalData.passcode}</strong> has been transmitted to <strong className="text-[#131b2e]">{applicationSentModalData.residentName} ({applicationSentModalData.unit})</strong>.
               </p>
-              <p className="text-[11px] text-amber-300 font-medium pt-1">
-                ✔ Once the flat owner contacts &amp; approves your application, your work allotment &amp; daily security gate pass will be activated.
-              </p>
+              <div className="p-2.5 rounded-xl bg-white border border-[#dae2fd] text-[11px] text-[#6e7b6c] flex items-center justify-between gap-2">
+                <span>Resident Contact Number:</span>
+                <strong className="text-[#131b2e] font-mono">{applicationSentModalData.phone}</strong>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#005320]">
+                <span className="material-symbols-outlined text-sm text-[#006b2c]">check_circle</span>
+                <span>Daily Security Gate Pass will activate automatically upon resident approval.</span>
+              </div>
             </div>
 
             <div className="pt-2 flex items-center justify-between gap-3 border-t border-gray-100">
@@ -2238,7 +2244,7 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                 className="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">call</span>
-                <span>Call Flat Owner</span>
+                <span>Call Resident</span>
               </button>
 
               <button
@@ -2247,7 +2253,7 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
                 className="px-6 py-2.5 rounded-xl bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-base">check</span>
-                <span>Got It! Await Owner Contact</span>
+                <span>Got It! Await Resident Contact</span>
               </button>
             </div>
           </div>
