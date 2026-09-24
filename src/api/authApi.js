@@ -274,6 +274,19 @@ export const authApi = {
   async registerResident(formData) {
     await new Promise((r) => setTimeout(r, 300));
 
+    if (formData && formData.communityId) {
+      const comm = communityApi.getCommunityById(formData.communityId);
+      if (comm && comm.status === 'FROZEN') {
+        const freezeErr = new Error('COMMUNITY_FROZEN');
+        freezeErr.isBlocked = true;
+        freezeErr.communityName = comm.name;
+        freezeErr.freezeReason = comm.freezeReason || 'Platform SaaS subscription license renewal is past due.';
+        freezeErr.contactEmail = 'support@communityconnect.io';
+        freezeErr.contactPhone = '+91 800-266-6864';
+        throw freezeErr;
+      }
+    }
+
     const users = getStoredUsers();
     const newUser = {
       id: `usr-res-${Date.now()}`,
@@ -319,6 +332,19 @@ export const authApi = {
     const invitation = invitations[invIndex];
     if (invitation.status === 'EXPIRED' || invitation.status === 'REVOKED') {
       throw new Error(`This invitation was ${invitation.status.toLowerCase()}.`);
+    }
+
+    if (invitation.communityId) {
+      const comm = communityApi.getCommunityById(invitation.communityId);
+      if (comm && comm.status === 'FROZEN') {
+        const freezeErr = new Error('COMMUNITY_FROZEN');
+        freezeErr.isBlocked = true;
+        freezeErr.communityName = comm.name;
+        freezeErr.freezeReason = comm.freezeReason || 'Platform SaaS subscription license renewal is past due.';
+        freezeErr.contactEmail = 'support@communityconnect.io';
+        freezeErr.contactPhone = '+91 800-266-6864';
+        throw freezeErr;
+      }
     }
 
     // Mark invitation accepted

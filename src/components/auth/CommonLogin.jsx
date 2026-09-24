@@ -108,7 +108,7 @@ const EIGHT_QUICK_MEMBERS = [
   }
 ];
 
-export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
+export const CommonLogin = ({ onLoginSuccess, onNavigate, initialBlockedModalData }) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -126,8 +126,14 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
-  const [blockedModalData, setBlockedModalData] = useState(null);
+  const [blockedModalData, setBlockedModalData] = useState(initialBlockedModalData || null);
   const [pendingApprovalModalData, setPendingApprovalModalData] = useState(null);
+
+  React.useEffect(() => {
+    if (initialBlockedModalData) {
+      setBlockedModalData(initialBlockedModalData);
+    }
+  }, [initialBlockedModalData]);
 
   const handleAuthError = (err) => {
     if (err.isBlocked || err.message === 'COMMUNITY_FROZEN') {
@@ -538,52 +544,52 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate }) => {
       )}
       {/* Account Blocked / Frozen Community Modal Pop-up */}
       {blockedModalData && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-rose-200 flex flex-col gap-5 relative overflow-hidden">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200 freeze-modal-overlay select-none cursor-default">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-rose-200 flex flex-col gap-5 relative overflow-hidden select-none cursor-default">
             <div className="absolute -top-12 -right-12 w-36 h-36 bg-rose-100 rounded-full blur-2xl pointer-events-none"></div>
 
-            <div className="flex items-start gap-4 relative z-10">
-              <div className="p-3.5 bg-rose-100 text-rose-700 rounded-2xl border border-rose-300 shrink-0 shadow-sm">
+            <div className="flex items-start gap-4 relative z-10 select-none cursor-default">
+              <div className="p-3.5 bg-rose-100 text-rose-700 rounded-2xl border border-rose-300 shrink-0 shadow-sm cursor-default">
                 <AlertCircle className="w-8 h-8" />
               </div>
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase tracking-wide mb-1.5 shadow-xs">
+              <div className="flex-1 select-none cursor-default">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase tracking-wide mb-1.5 shadow-xs cursor-default">
                   🔒 Subscription Frozen / Access Suspended
                 </div>
-                <h3 className="text-xl font-extrabold text-slate-900">Community Access Blocked</h3>
-                <p className="text-xs text-slate-600 mt-1">
-                  Portal access for <span className="font-bold text-slate-900">{blockedModalData.communityName}</span> has been frozen by Platform HQ Operations.
+                <h3 className="text-xl font-extrabold text-slate-900 cursor-default">Community Access Blocked</h3>
+                <p className="text-xs text-slate-600 mt-1 cursor-default">
+                  Portal access for <span className="font-bold text-slate-900 cursor-default">{blockedModalData.communityName}</span> has been frozen by Platform HQ Operations.
                 </p>
               </div>
             </div>
 
-            <div className="bg-rose-50/70 rounded-2xl p-4 border border-rose-200/90 flex flex-col gap-1.5 relative z-10">
-              <span className="text-[10px] font-extrabold text-rose-700 uppercase tracking-wider">Freeze Reason / Notice</span>
-              <p className="text-xs text-slate-800 font-medium leading-relaxed italic">
+            <div className="bg-rose-50/70 rounded-2xl p-4 border border-rose-200/90 flex flex-col gap-1.5 relative z-10 select-none cursor-default">
+              <span className="text-[10px] font-extrabold text-rose-700 uppercase tracking-wider cursor-default">Freeze Reason / Notice</span>
+              <p className="text-xs text-slate-800 font-medium leading-relaxed italic cursor-default">
                 "{blockedModalData.reason}"
               </p>
             </div>
 
-            <div className="bg-amber-50/90 rounded-2xl p-4 border border-amber-200 text-xs text-amber-950 flex flex-col gap-2 relative z-10">
-              <span className="font-extrabold text-amber-950 flex items-center gap-1.5">
+            <div className="bg-amber-50/90 rounded-2xl p-4 border border-amber-200 text-xs text-amber-950 flex flex-col gap-2 relative z-10 select-none cursor-default">
+              <span className="font-extrabold text-amber-950 flex items-center gap-1.5 cursor-default">
                 <ShieldCheck className="w-4 h-4 text-amber-700" />
                 How to Restore Service:
               </span>
-              <p className="text-[11px] text-amber-900 leading-normal">
+              <p className="text-[11px] text-amber-900 leading-normal cursor-default">
                 Please contact Platform HQ Super-Admin or Finance Office to unfreeze society access and restore live portal services:
               </p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-amber-200/80 font-bold text-xs">
-                <a href={`mailto:${blockedModalData.contactEmail}`} className="text-[#16A34A] hover:underline flex items-center gap-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-amber-200/80 font-bold text-xs select-none cursor-default">
+                <a href={`mailto:${blockedModalData.contactEmail}`} className="text-[#16A34A] hover:underline flex items-center gap-1 cursor-pointer">
                   📧 {blockedModalData.contactEmail}
                 </a>
-                <span className="hidden sm:inline text-amber-400">•</span>
-                <a href={`tel:${blockedModalData.contactPhone}`} className="text-[#16A34A] hover:underline flex items-center gap-1">
+                <span className="hidden sm:inline text-amber-400 cursor-default">•</span>
+                <a href={`tel:${blockedModalData.contactPhone}`} className="text-[#16A34A] hover:underline flex items-center gap-1 cursor-pointer">
                   📞 {blockedModalData.contactPhone}
                 </a>
               </div>
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-slate-100 relative z-10">
+            <div className="flex justify-end pt-2 border-t border-slate-100 relative z-10 select-none cursor-default">
               <button
                 type="button"
                 onClick={() => setBlockedModalData(null)}

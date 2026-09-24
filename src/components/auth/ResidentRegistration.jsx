@@ -12,10 +12,12 @@ import {
   Phone, 
   Mail, 
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { INITIAL_COMMUNITIES } from '../../data/initialData';
 import { authApi } from '../../api/authApi';
+import { communityApi } from '../../api/communityApi';
 
 export const ResidentRegistration = ({ onRegistrationComplete, onNavigate }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -33,21 +35,46 @@ export const ResidentRegistration = ({ onRegistrationComplete, onNavigate }) => 
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [conflictDetected, setConflictDetected] = useState(false);
+  const [blockedModalData, setBlockedModalData] = useState(null);
 
-  const filteredCommunities = INITIAL_COMMUNITIES.filter((c) =>
+  const filteredCommunities = INITIAL_COMMUNITIES.map((c) => {
+    const dbComm = communityApi.getCommunityById(c.id);
+    return dbComm ? { ...c, ...dbComm } : c;
+  }).filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectCommunity = (comm) => {
-    setSelectedCommunity(comm);
+    const dbComm = communityApi.getCommunityById(comm.id);
+    const activeComm = dbComm || comm;
+    if (activeComm.status === 'FROZEN') {
+      setBlockedModalData({
+        communityName: activeComm.name,
+        reason: activeComm.freezeReason || 'Platform SaaS subscription license renewal is past due.',
+        contactEmail: 'support@communityconnect.io',
+        contactPhone: '+91 800-266-6864'
+      });
+      return;
+    }
+    setSelectedCommunity(activeComm);
     setCurrentStep(2);
   };
 
   const handleResidenceDetailsSubmit = (e) => {
     e.preventDefault();
     if (!flatNumber) return;
+    const dbComm = communityApi.getCommunityById(selectedCommunity.id);
+    if (dbComm && dbComm.status === 'FROZEN') {
+      setBlockedModalData({
+        communityName: dbComm.name,
+        reason: dbComm.freezeReason || 'Platform SaaS subscription license renewal is past due.',
+        contactEmail: 'support@communityconnect.io',
+        contactPhone: '+91 800-266-6864'
+      });
+      return;
+    }
     setCurrentStep(3);
   };
 
@@ -60,7 +87,7 @@ export const ResidentRegistration = ({ onRegistrationComplete, onNavigate }) => 
     setIsVerifyingOtp(true);
     await new Promise((r) => setTimeout(r, 600));
 
-    // Simulate conflict detection if Flat A-1204 at My Home Bhooja (as in Image 1 scenario)
+    // Simulate conflict detection if Flat A-1204 at My Home Bhooja
     const isConflict = selectedCommunity.id === 'comm-bhooja' && flatNumber.toUpperCase() === 'A-1204';
     setConflictDetected(isConflict);
 
@@ -80,7 +107,16 @@ export const ResidentRegistration = ({ onRegistrationComplete, onNavigate }) => 
       setIsSubmitted(true);
       setCurrentStep(5);
     } catch (err) {
-      alert(err.message);
+      if (err.isBlocked || err.message === 'COMMUNITY_FROZEN') {
+        setBlockedModalData({
+          communityName: err.communityName || selectedCommunity?.name || 'Community',
+          reason: err.freezeReason || 'Platform SaaS subscription license renewal is past due.',
+          contactEmail: err.contactEmail || 'support@communityconnect.io',
+          contactPhone: err.contactPhone || '+91 800-266-6864'
+        });
+      } else {
+        alert(err.message || 'Registration failed');
+      }
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -468,6 +504,66 @@ export const ResidentRegistration = ({ onRegistrationComplete, onNavigate }) => 
         </div>
 
       </div>
+
+      {/* Account Blocked / Frozen Community Modal Pop-up */}
+      {blockedModalData && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200 freeze-modal-overlay select-none cursor-default">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border-2 border-rose-200 flex flex-col gap-5 relative overflow-hidden select-none cursor-default">
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-rose-100 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div className="flex items-start gap-4 relative z-10 select-none cursor-default">
+              <div className="p-3.5 bg-rose-100 text-rose-700 rounded-2xl border border-rose-300 shrink-0 shadow-sm cursor-default">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div className="flex-1 select-none cursor-default">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 uppercase tracking-wide mb-1.5 shadow-xs cursor-default">
+                  🔒 Subscription Frozen / Access Suspended
+                </div>
+                <h3 className="text-xl font-extrabold text-slate-900 cursor-default">Community Access Blocked</h3>
+                <p className="text-xs text-slate-600 mt-1 cursor-default">
+                  Portal access for <span className="font-bold text-slate-900 cursor-default">{blockedModalData.communityName}</span> has been frozen by Platform HQ Operations.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50/70 rounded-2xl p-4 border border-rose-200/90 flex flex-col gap-1.5 relative z-10 select-none cursor-default">
+              <span className="text-[10px] font-extrabold text-rose-700 uppercase tracking-wider cursor-default">Freeze Reason / Notice</span>
+              <p className="text-xs text-slate-800 font-medium leading-relaxed italic cursor-default">
+                "{blockedModalData.reason}"
+              </p>
+            </div>
+
+            <div className="bg-amber-50/90 rounded-2xl p-4 border border-amber-200 text-xs text-amber-950 flex flex-col gap-2 relative z-10 select-none cursor-default">
+              <span className="font-extrabold text-amber-950 flex items-center gap-1.5 cursor-default">
+                <ShieldCheck className="w-4 h-4 text-amber-700" />
+                How to Restore Service:
+              </span>
+              <p className="text-[11px] text-amber-900 leading-normal cursor-default">
+                Please contact Platform HQ Super-Admin or Finance Office to unfreeze society access and restore live portal services:
+              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-amber-200/80 font-bold text-xs select-none cursor-default">
+                <a href={`mailto:${blockedModalData.contactEmail}`} className="text-[#16A34A] hover:underline flex items-center gap-1 cursor-pointer">
+                  📧 {blockedModalData.contactEmail}
+                </a>
+                <span className="hidden sm:inline text-amber-400 cursor-default">•</span>
+                <a href={`tel:${blockedModalData.contactPhone}`} className="text-[#16A34A] hover:underline flex items-center gap-1 cursor-pointer">
+                  📞 {blockedModalData.contactPhone}
+                </a>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100 relative z-10 select-none cursor-default">
+              <button
+                type="button"
+                onClick={() => setBlockedModalData(null)}
+                className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
+                Dismiss &amp; Close Notice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

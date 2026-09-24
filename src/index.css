@@ -115,3 +115,51 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.7);
 }
+
+/* Bulletproof text-selection prevention & default arrow cursor for freeze modals and lock screens */
+.no-text-select,
+.freeze-modal-overlay,
+.frozen-notice-card {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  cursor: default !important;
+}
+
+.no-text-select *,
+.freeze-modal-overlay *,
+.frozen-notice-card * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.freeze-modal-overlay p,
+.freeze-modal-overlay span,
+.freeze-modal-overlay h1,
+.freeze-modal-overlay h2,
+.freeze-modal-overlay h3,
+.freeze-modal-overlay h4,
+.freeze-modal-overlay h5,
+.freeze-modal-overlay h6,
+.freeze-modal-overlay label,
+.freeze-modal-overlay div,
+.frozen-notice-card p,
+.frozen-notice-card span,
+.frozen-notice-card h1,
+.frozen-notice-card h2,
+.frozen-notice-card h3,
+.frozen-notice-card label,
+.frozen-notice-card div {
+  cursor: default !important;
+}
+
+.freeze-modal-overlay button,
+.freeze-modal-overlay a,
+.frozen-notice-card button,
+.frozen-notice-card a {
+  cursor: pointer !important;
+}
+
