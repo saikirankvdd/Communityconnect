@@ -1459,17 +1459,9 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
             </button>
 
             <div className="flex items-center gap-2.5 pl-2 bg-[#f2f3ff] p-1.5 pr-3 rounded-full">
-              {currentUser?.avatar ? (
-                <img
-                  alt={adminName}
-                  className="w-8 h-8 rounded-full object-cover ring-2 ring-[#006b2c]/30"
-                  src={currentUser.avatar}
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-[#006b2c] text-white flex items-center justify-center font-bold text-xs">
-                  {adminName.charAt(0)}
-                </div>
-              )}
+              <div className="w-8 h-8 rounded-full bg-[#006b2c] text-white flex items-center justify-center font-black text-sm ring-2 ring-[#006b2c]/20 shadow-xs uppercase">
+                {adminName.charAt(0)}
+              </div>
               <div className="flex flex-col text-left">
                 <span className="font-bold text-xs text-[#131b2e] leading-tight">{adminName}</span>
                 <span className="text-[10px] text-[#006b2c] font-semibold leading-tight">{adminTitle}</span>

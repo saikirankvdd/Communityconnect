@@ -151,17 +151,8 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 p-1 pl-2 hover:bg-gray-50 rounded-xl border border-gray-200 transition"
                 >
-                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-[#16A34A]/10 border border-[#16A34A]/20 flex items-center justify-center shrink-0">
-                    {currentUser.avatarUrl ? (
-                      <img
-                        src={currentUser.avatarUrl}
-                        alt={currentUser.name}
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <UserIcon className="w-4 h-4 text-[#16A34A]" />
-                    )}
+                  <div className="w-7 h-7 rounded-lg bg-[#006b2c] text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-xs uppercase">
+                    {currentUser.name.charAt(0)}
                   </div>
                   <div className="hidden md:flex flex-col items-start text-left">
                     <span className="text-xs font-semibold text-gray-900 leading-none">
