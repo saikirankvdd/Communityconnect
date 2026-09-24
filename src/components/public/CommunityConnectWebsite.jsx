@@ -74,7 +74,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
 
-  // Preconfigured Member Personas (Including Home Cook & Housekeeper Maid)
+  // Preconfigured Member Personas (8 Roles)
   const QUICK_PRECONFIGURED_MEMBERS = [
     {
       id: 'usr-plat-admin',
@@ -106,7 +106,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       id: 'usr-res-arjun',
       name: 'Arjun Kumar',
       role: 'RESIDENT',
-      roleLabel: 'Resident Owner',
+      roleLabel: 'Resident Owner #1',
       roleBadgeBg: 'bg-blue-100 text-blue-800 border-blue-200',
       title: 'Apartment Owner • Flat A-1204',
       org: 'My Home Bhooja',
@@ -114,6 +114,19 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       password: 'password123',
       avatar: null,
       scope: 'Visitor FASTag, Group Demands & Bookings'
+    },
+    {
+      id: 'usr-res-priya',
+      name: 'Priya Verma',
+      role: 'RESIDENT',
+      roleLabel: 'Resident Owner #2',
+      roleBadgeBg: 'bg-cyan-100 text-cyan-900 border-cyan-200',
+      title: 'Apartment Owner • Flat C-502',
+      org: 'My Home Bhooja',
+      email: 'priya.verma@example.com',
+      password: 'password123',
+      avatar: null,
+      scope: 'Resident Hub, Payments & Amenities'
     },
     {
       id: 'usr-sec-ramsingh',
@@ -1677,7 +1690,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-[#006b2c]" />
-                  <span>Existing Member &amp; Staff Sign In (7 Roles)</span>
+                  <span>Existing Member &amp; Staff Sign In (8 Roles)</span>
                 </span>
                 <span className="text-[10px] text-[#006b2c] font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   1-Click Access
