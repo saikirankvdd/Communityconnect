@@ -225,6 +225,49 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
     }
   };
 
+  // Invitation Activation State
+  const [showActivateModal, setShowActivateModal] = useState(false);
+  const [inviteTokenInput, setInviteTokenInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [activateLoading, setActivateLoading] = useState(false);
+  const [activateError, setActivateError] = useState(null);
+  const [activateSuccess, setActivateSuccess] = useState(false);
+
+  // Unique HTML IDs
+  const citySelectId = useId();
+  const localityInputId = useId();
+  const commNameInputId = useId();
+  const commTypeSelectId = useId();
+  const unitsSliderId = useId();
+  const gatesInputId = useId();
+  const presNameId = useId();
+  const presEmailId = useId();
+  const presPhoneId = useId();
+  const paymentMethodId = useId();
+  const contractCheckboxId = useId();
+  const loginIdField = useId();
+  const loginPassField = useId();
+  const inviteTokenId = useId();
+  const newPassId = useId();
+
+  // Price computation logic
+  const isEnterprise = selectedTier === 'ENTERPRISE_PREMIUM';
+  const baseMonthlyPrice = isEnterprise ? 65000 : 35000;
+  const discountMultiplier = billingCycle === 'ANNUAL' ? 0.85 : 1.0;
+  const effectiveMonthlyFee = Math.round(baseMonthlyPrice * discountMultiplier);
+  const effectivePerUnitMonthly = Math.round(effectiveMonthlyFee / Math.max(unitsCount, 1));
+  const annualTotal = effectiveMonthlyFee * 12;
+
+  // City presets
+  const cityPresets = {
+    Hyderabad: ['Financial District', 'Gachibowli', 'Madhapur', 'Tellapur', 'Kokapet', 'Jubilee Hills'],
+    Bengaluru: ['Whitefield', 'Bellandur', 'Sarjapur Road', 'Electronic City', 'Indiranagar', 'Hebbal'],
+    Mumbai: ['Powai', 'BKC Corridor', 'Thane West', 'Andheri East', 'Lower Parel', 'Malad'],
+    'Delhi-NCR': ['Gurugram Golf Course Rd', 'Cyber City', 'Noida Sector 150', 'Greater Noida West', 'Dwarka'],
+    Pune: ['Hinjawadi IT Park', 'Kharadi', 'Baner', 'Wakad', 'Viman Nagar'],
+    Chennai: ['OMR IT Corridor', 'ECR', 'Velachery', 'Anna Nagar', 'Perungudi']
+  };
+
   // Quick 1-Click Login for the 5 Members
   const handleQuickLogin = async (email, password = 'password123') => {
     setLoginLoading(true);
