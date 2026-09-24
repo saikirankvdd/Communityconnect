@@ -2621,6 +2621,35 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                                 </button>
                               </div>
                             )}
+
+                            {/* Attached Files & Uploaded Documents/Images */}
+                            {post.attachments && post.attachments.length > 0 && (
+                              <div className="mt-3 flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-xs text-[#006b2c]">attach_file</span>
+                                  <span>Attached Files ({post.attachments.length})</span>
+                                </span>
+                                <div className="flex flex-wrap gap-2">
+                                  {post.attachments.map((file, idx) => (
+                                    <a
+                                      key={idx}
+                                      href={file.dataUrl || '#'}
+                                      download={file.name}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 px-3 py-1.5 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 rounded-lg border border-slate-300 transition shadow-2xs group"
+                                    >
+                                      <span className="material-symbols-outlined text-sm text-[#006b2c]">
+                                        {file.isImage ? 'image' : file.name?.endsWith('.pdf') ? 'picture_as_pdf' : 'description'}
+                                      </span>
+                                      <span className="truncate max-w-[150px]">{file.name}</span>
+                                      <span className="text-[10px] text-slate-400">({file.size})</span>
+                                      <span className="material-symbols-outlined text-xs text-slate-400 group-hover:text-[#006b2c]">download</span>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Post Action Footer: Likes and Comments Trigger */}

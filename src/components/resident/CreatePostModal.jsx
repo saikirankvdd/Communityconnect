@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { serviceApi } from '../../api/serviceApi';
 
 export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
@@ -8,6 +8,8 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
   const [price, setPrice] = useState('');
   const [itemLocation, setItemLocation] = useState('Flat A-1204');
   const [selectedPresetImage, setSelectedPresetImage] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const fileInputRef = useRef(null);
 
   const PRESET_IMAGES = [
     { label: 'Kids Bicycle', url: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80' },
@@ -15,6 +17,32 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
     { label: 'Home Plants / Garden', url: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=600&q=80' },
     { label: 'Badminton / Sports', url: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=600&q=80' }
   ];
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUploadedFiles(prev => [
+          ...prev,
+          {
+            id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            name: file.name,
+            size: (file.size / 1024).toFixed(1) + ' KB',
+            type: file.type,
+            isImage: file.type.startsWith('image/'),
+            dataUrl: event.target.result
+          }
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+    if (e.target) e.target.value = '';
+  };
+
+  const removeFile = (fileId) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -24,6 +52,9 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
     if (category === 'classifieds' && price) {
       fullContent = `${content}\n\n🏷️ Price: ₹${price} • Pickup Location: ${itemLocation}`;
     }
+
+    const firstImageFile = uploadedFiles.find(f => f.isImage);
+    const finalImageUrl = selectedPresetImage || (firstImageFile ? firstImageFile.dataUrl : null);
 
     const newPost = serviceApi.createPost({
       communityId: 'comm-bhooja',
@@ -35,7 +66,8 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
       type: category === 'classifieds' ? 'CLASSIFIED' : category === 'notice' ? 'ANNOUNCEMENT' : 'DISCUSSION',
       category: category,
       price: price ? `₹${price}` : null,
-      imageUrl: selectedPresetImage || null,
+      imageUrl: finalImageUrl,
+      attachments: uploadedFiles,
       comments: []
     });
 
@@ -164,10 +196,88 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
             />
           </div>
 
-          {/* Optional Image selector */}
+          {/* Dedicated File Upload Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold text-gray-600 uppercase flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm text-[#006b2c]">attach_file</span>
+                <span>Upload Files &amp; Attachments <span className="text-gray-400 font-normal">(Images, PDFs, Documents)</span></span>
+              </label>
+              {uploadedFiles.length > 0 && (
+                <span className="text-[10px] text-[#006b2c] font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} attached
+                </span>
+              )}
+            </div>
+
+            {/* Hidden Input & Trigger Box */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-emerald-300 hover:border-[#006b2c] bg-emerald-50/30 hover:bg-emerald-50/70 rounded-2xl p-4 transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-1.5 group shadow-2xs"
+            >
+              <div className="w-10 h-10 rounded-full bg-emerald-100 text-[#006b2c] group-hover:bg-[#006b2c] group-hover:text-white transition-all flex items-center justify-center shadow-xs">
+                <span className="material-symbols-outlined text-xl">cloud_upload</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-bold text-gray-800 group-hover:text-[#006b2c]">
+                  Click to Upload Any File
+                </span>
+                <span className="text-xs text-gray-500 font-medium">or drag and drop</span>
+              </div>
+              <span className="text-[10px] text-gray-500">
+                Supports PNG, JPG, PDF, DOCX, XLSX, ZIP (Max 25MB each)
+              </span>
+            </div>
+
+            {/* List of Uploaded Files */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                {uploadedFiles.map(file => (
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs shadow-2xs"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      {file.isImage ? (
+                        <img src={file.dataUrl} alt={file.name} className="w-8 h-8 rounded-lg object-cover shrink-0 border border-slate-200" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-[#006b2c] flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-base">
+                            {file.name.endsWith('.pdf') ? 'picture_as_pdf' : 'description'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex flex-col truncate">
+                        <span className="font-semibold text-gray-800 truncate text-xs">{file.name}</span>
+                        <span className="text-[10px] text-gray-400">{file.size}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(file.id)}
+                      className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-base">delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Optional Preset Image Selector */}
           <div>
             <label className="text-[10px] font-bold text-gray-600 uppercase block mb-1.5">
-              Add Photo / Visual Asset <span className="text-gray-400 font-normal">(Optional)</span>
+              Or Choose Quick Stock Photo <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PRESET_IMAGES.map((img, idx) => (
@@ -180,7 +290,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
                       : 'border-gray-200 hover:opacity-90'
                   }`}
                 >
-                  <img src={img.url} alt={img.label} className="w-full h-16 object-cover" />
+                  <img src={img.url} alt={img.label} className="w-full h-14 object-cover" />
                   <span className="text-[10px] font-medium text-gray-700 block p-1 text-center truncate bg-white">
                     {img.label}
                   </span>
