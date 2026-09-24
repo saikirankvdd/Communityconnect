@@ -1243,187 +1243,132 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column (8 cols) */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
-                  {/* Domestic Helpers & Household Staff Approvals Card */}
-                  <div className="rounded-2xl bg-white p-6 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-amber-200 space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-bold shrink-0">
-                          <span className="material-symbols-outlined text-xl">skillet</span>
+                  {/* Domestic Helpers & Household Staff Approvals Card (ONLY RENDER WHEN PENDING APPLICATIONS EXIST) */}
+                  {staffRequests.filter(r => r.status !== 'HIRED' && (r.applications || []).some(a => a.status !== 'ACCEPTED')).length > 0 && (
+                    <div className="rounded-2xl bg-white p-6 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-amber-200 space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-bold shrink-0">
+                            <span className="material-symbols-outlined text-xl">skillet</span>
+                          </div>
+                          <div>
+                            <h2 className="text-base font-extrabold text-[#131b2e]">Domestic Helpers &amp; Cook/Maid Approvals</h2>
+                            <p className="text-xs text-gray-500">Passcode applications requiring owner review &amp; allotment for {currentUser?.unit || 'Flat A-1204'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h2 className="text-base font-extrabold text-[#131b2e]">Domestic Helpers &amp; Cook/Maid Approvals</h2>
-                          <p className="text-xs text-gray-500">Manage passcode applications &amp; allotted staff for {currentUser?.unit || 'Flat A-1204'}</p>
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateStaffModal(true)}
+                          className="px-3.5 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-base">add</span>
+                          <span>+ Post Helper Requirement</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5 bg-amber-50 p-2 rounded-xl border border-amber-200">
+                          <span className="material-symbols-outlined text-base text-amber-600">hourglass_top</span>
+                          <span>Pending Passcode Applications (Action Required)</span>
+                        </div>
+
+                        {staffRequests
+                          .filter(r => r.status !== 'HIRED')
+                          .map(req => {
+                            const pendingApps = (req.applications || []).filter(a => a.status !== 'ACCEPTED');
+                            if (pendingApps.length === 0) return null;
+
+                            return (
+                              <div key={req.id} className="p-4 rounded-xl bg-gray-50 border border-amber-200 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] uppercase border border-amber-300">
+                                      {req.staffType || 'Cook'} Needed
+                                    </span>
+                                    <span className="text-xs font-bold text-gray-900">{req.title}</span>
+                                  </div>
+                                  <span className="text-xs font-mono font-bold text-[#006b2c]">Budget: ₹{req.offeredBudget}/mo</span>
+                                </div>
+
+                                <div className="space-y-2 pt-2 border-t border-gray-200">
+                                  {pendingApps.map(app => (
+                                    <div key={app.id} className="p-3.5 rounded-xl bg-white border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                      <div className="space-y-1 text-xs">
+                                        <div className="flex items-center gap-2">
+                                          <strong className="text-gray-900 text-sm">{app.staffName}</strong>
+                                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
+                                            Passcode Submitted • Allotment Pending
+                                          </span>
+                                        </div>
+                                        <div className="text-gray-600">
+                                          Category: <strong className="text-gray-800">{app.category}</strong> • Shift: <strong className="text-gray-800">{app.proposedShiftTime}</strong> • Rate: <strong className="text-[#006b2c]">₹{app.proposedMonthlyPay}/mo</strong>
+                                        </div>
+                                        <div className="text-slate-500 italic text-[11px]">
+                                          "{app.note}"
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={() => showToast(`Calling applicant ${app.staffName} at ${app.phone}...`, 'info')}
+                                          className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">call</span>
+                                          <span>Call Applicant</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAcceptStaffApp(req.id, app.id)}
+                                          className="px-4 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">check_circle</span>
+                                          <span>Approve &amp; Allot Work</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Group Buying Pool Banner (ONLY RENDER IF NOT YET JOINED) */}
+                  {!acPoolJoined && (
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7ffc97]/50 via-white to-white p-5 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-[#eaedff] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-[#006b2c] text-white flex items-center justify-center shadow-sm shrink-0">
+                          <span className="material-symbols-outlined text-2xl">group_work</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-bold text-[#131b2e]">Community Group AC Servicing</span>
+                            <span className="px-2 py-0.5 rounded-full bg-[#006b2c] text-white text-[10px] font-bold">
+                              SAVE 25%
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#3e4a3d] mt-1">
+                            <strong>{acPool?.currentParticipants || 18} / {acPool?.minThreshold || 20} neighbors joined</strong> from Tower A &amp; B. Unlock group discounted deep clean at ₹{acPool?.discountedPrice || 499}/unit.
+                          </p>
                         </div>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setShowCreateStaffModal(true)}
-                        className="px-3.5 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
+                        onClick={() => {
+                          if (acPool) {
+                            setSelectedPoolForJoinModal(acPool);
+                          }
+                        }}
+                        className="whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer bg-[#006b2c] text-white hover:bg-[#00873a]"
                       >
-                        <span className="material-symbols-outlined text-base">add</span>
-                        <span>+ Post Helper Requirement</span>
+                        Join Group Pool
                       </button>
                     </div>
-
-                    <div className="space-y-4">
-                      {/* 1. Pending Passcode Applications List */}
-                      {staffRequests.filter(r => r.status !== 'HIRED' && (r.applications || []).some(a => a.status !== 'ACCEPTED')).length > 0 && (
-                        <div className="space-y-3">
-                          <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5 bg-amber-50 p-2 rounded-xl border border-amber-200">
-                            <span className="material-symbols-outlined text-base text-amber-600">hourglass_top</span>
-                            <span>Pending Passcode Applications (Action Required)</span>
-                          </div>
-
-                          {staffRequests
-                            .filter(r => r.status !== 'HIRED')
-                            .map(req => {
-                              const pendingApps = (req.applications || []).filter(a => a.status !== 'ACCEPTED');
-                              if (pendingApps.length === 0) return null;
-
-                              return (
-                                <div key={req.id} className="p-4 rounded-xl bg-gray-50 border border-amber-200 space-y-3">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] uppercase border border-amber-300">
-                                        {req.staffType || 'Cook'} Needed
-                                      </span>
-                                      <span className="text-xs font-bold text-gray-900">{req.title}</span>
-                                    </div>
-                                    <span className="text-xs font-mono font-bold text-[#006b2c]">Budget: ₹{req.offeredBudget}/mo</span>
-                                  </div>
-
-                                  <div className="space-y-2 pt-2 border-t border-gray-200">
-                                    {pendingApps.map(app => (
-                                      <div key={app.id} className="p-3.5 rounded-xl bg-white border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                                        <div className="space-y-1 text-xs">
-                                          <div className="flex items-center gap-2">
-                                            <strong className="text-gray-900 text-sm">{app.staffName}</strong>
-                                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300">
-                                              Passcode Submitted • Allotment Pending
-                                            </span>
-                                          </div>
-                                          <div className="text-gray-600">
-                                            Category: <strong className="text-gray-800">{app.category}</strong> • Shift: <strong className="text-gray-800">{app.proposedShiftTime}</strong> • Rate: <strong className="text-[#006b2c]">₹{app.proposedMonthlyPay}/mo</strong>
-                                          </div>
-                                          <div className="text-slate-500 italic text-[11px]">
-                                            "{app.note}"
-                                          </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 shrink-0">
-                                          <button
-                                            type="button"
-                                            onClick={() => showToast(`Calling applicant ${app.staffName} at ${app.phone}...`, 'info')}
-                                            className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
-                                          >
-                                            <span className="material-symbols-outlined text-sm">call</span>
-                                            <span>Call Applicant</span>
-                                          </button>
-
-                                          <button
-                                            type="button"
-                                            onClick={() => handleAcceptStaffApp(req.id, app.id)}
-                                            className="px-4 py-2 bg-[#006b2c] hover:bg-[#00873a] text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1 cursor-pointer"
-                                          >
-                                            <span className="material-symbols-outlined text-sm">check_circle</span>
-                                            <span>Approve &amp; Allot Work</span>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                        </div>
-                      )}
-
-                      {/* 2. Active Approved & Allotted Staff List */}
-                      {staffRequests.filter(r => r.status === 'HIRED' || (r.applications || []).some(a => a.status === 'ACCEPTED')).length > 0 && (
-                        <div className="space-y-3 pt-1">
-                          <div className="text-xs font-bold text-[#005320] flex items-center gap-1.5 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
-                            <span className="material-symbols-outlined text-base text-[#006b2c]">verified</span>
-                            <span>Active Approved Household Staff (Allotted)</span>
-                          </div>
-
-                          {staffRequests
-                            .filter(r => r.status === 'HIRED' || (r.applications || []).some(a => a.status === 'ACCEPTED'))
-                            .map(req => {
-                              const hiredApp = req.hiredStaff || (req.applications || []).find(a => a.status === 'ACCEPTED');
-                              if (!hiredApp) return null;
-
-                              return (
-                                <div key={req.id} className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                  <div className="space-y-1 text-xs">
-                                    <div className="flex items-center gap-2">
-                                      <span className="px-2 py-0.5 rounded-full bg-[#006b2c] text-white text-[10px] font-bold">
-                                        ✔ Allotted &amp; Active
-                                      </span>
-                                      <strong className="text-gray-900 text-sm">{hiredApp.staffName}</strong>
-                                      <span className="text-gray-500 font-medium">({hiredApp.category || req.staffType})</span>
-                                    </div>
-                                    <div className="text-gray-700">
-                                      Shift: <strong>{hiredApp.proposedShiftTime || req.preferredTime}</strong> • Monthly Pay: <strong className="text-[#006b2c]">₹{hiredApp.proposedMonthlyPay || req.offeredBudget}/mo</strong>
-                                    </div>
-                                    <div className="text-emerald-800 text-[11px] font-medium flex items-center gap-1">
-                                      <span className="material-symbols-outlined text-sm">badge</span>
-                                      <span>Gate Entry Pass Auto-Issued to Security Guards</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <button
-                                      type="button"
-                                      onClick={() => showToast(`Calling ${hiredApp.staffName} at ${hiredApp.phone}...`, 'info')}
-                                      className="px-3.5 py-2 bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
-                                    >
-                                      <span className="material-symbols-outlined text-sm">call</span>
-                                      <span>Call Staff</span>
-                                    </button>
-                                    <span className="px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold border border-emerald-300">
-                                      Work Allotted ✓
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Group Buying Pool Banner */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7ffc97]/50 via-white to-white p-5 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-[#eaedff] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-[#006b2c] text-white flex items-center justify-center shadow-sm shrink-0">
-                        <span className="material-symbols-outlined text-2xl">group_work</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-bold text-[#131b2e]">Community Group AC Servicing</span>
-                          <span className="px-2 py-0.5 rounded-full bg-[#006b2c] text-white text-[10px] font-bold">
-                            SAVE 25%
-                          </span>
-                        </div>
-                        <p className="text-xs text-[#3e4a3d] mt-1">
-                          <strong>{acPool?.currentParticipants || 18} / {acPool?.minThreshold || 20} neighbors joined</strong> from Tower A &amp; B. Unlock group discounted deep clean at ₹{acPool?.discountedPrice || 499}/unit.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (acPool) {
-                          setSelectedPoolForJoinModal(acPool);
-                        }
-                      }}
-                      className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
-                        acPoolJoined ? 'bg-emerald-800 text-white' : 'bg-[#006b2c] text-white hover:bg-[#00873a]'
-                      }`}
-                    >
-                      {acPoolJoined ? 'Enrolled ✓ (Joined)' : 'Join Group Pool'}
-                    </button>
-                  </div>
+                  )}
 
                   {/* Service & Home Assistance Shortcuts */}
                   <div className="rounded-2xl bg-white p-6 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.05)] border border-[#eaedff]">
