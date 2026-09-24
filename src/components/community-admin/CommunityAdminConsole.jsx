@@ -385,6 +385,65 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
   const [showPresidentPayoutModal, setShowPresidentPayoutModal] = useState(false);
   const [payoutPrefill, setPayoutPrefill] = useState({ payee: '', amount: '', invoiceRef: '', sourceAccount: 'OPERATING_BANK' });
   const [isAuditingInflows, setIsAuditingInflows] = useState(false);
+
+  // Manual Local Vendor Entry Modal State
+  const [showManualVendorModal, setShowManualVendorModal] = useState(false);
+  const [manualVendorForm, setManualVendorForm] = useState({
+    name: '',
+    category: 'General Maintenance & Repairs',
+    monthlyPayout: '',
+    supervisor: '',
+    phone: '',
+    bankAccount: '',
+    ifsc: '',
+    entryType: 'MANUAL_LOCAL'
+  });
+
+  const handleAddManualVendor = (e) => {
+    e.preventDefault();
+    if (!manualVendorForm.name.trim()) {
+      alert('Please enter vendor/company name.');
+      return;
+    }
+    const newVendor = {
+      id: `AMC-MANUAL-${Date.now()}`,
+      name: manualVendorForm.name.trim(),
+      category: manualVendorForm.category,
+      status: 'ACTIVE_AMC',
+      entryType: manualVendorForm.entryType || 'MANUAL_LOCAL',
+      slaGuarantee: 'Local Direct SLA • On-Call Restoral',
+      renewalDate: 'Custom Contract',
+      monthlyPayout: Number(manualVendorForm.monthlyPayout) || 15000,
+      pendingInvoice: false,
+      invoiceRef: null,
+      supervisor: manualVendorForm.supervisor || 'Local Representative',
+      phone: manualVendorForm.phone || '+91 98000 00000',
+      bankAccount: manualVendorForm.bankAccount || '•••• 8821',
+      ifsc: manualVendorForm.ifsc || 'HDFC0001092',
+      emergencyPhone: manualVendorForm.phone || '+91 98000 00000',
+      activeTicketsCount: 0,
+      rating: 5.0
+    };
+
+    const updated = [newVendor, ...amcContracts];
+    setAmcContracts(updated);
+    try {
+      localStorage.setItem(`communityconnect_vendors_${currentCommunity?.id || 'default'}`, JSON.stringify(updated));
+    } catch {}
+
+    setShowManualVendorModal(false);
+    setManualVendorForm({
+      name: '',
+      category: 'General Maintenance & Repairs',
+      monthlyPayout: '',
+      supervisor: '',
+      phone: '',
+      bankAccount: '',
+      ifsc: '',
+      entryType: 'MANUAL_LOCAL'
+    });
+    showToast(`Manual vendor "${newVendor.name}" registered successfully!`, 'success');
+  };
   const [inflowLedger, setInflowLedger] = useState([
     {
       id: 'IN-9081',
@@ -3971,6 +4030,14 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
+                      onClick={() => setShowManualVendorModal(true)}
+                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">edit_note</span>
+                      <span>+ Manual Vendor Entry</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => showToast('Biometric attendance scanner synced: 142 daily helpers verified on estate perimeter.', 'success')}
                       className="px-3.5 py-2 bg-[#f2f3ff] text-[#131b2e] hover:bg-[#eaedff] rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
                     >
@@ -4950,6 +5017,157 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
           onClose={() => setShowCreateGatePassModal(false)}
           onPassCreated={handleCreatePassSuccess}
         />
+
+        {/* 13. Manual Vendor & Contractor Entry Modal */}
+        {showManualVendorModal && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-gray-200 flex flex-col gap-5 relative overflow-hidden">
+              
+              <div className="flex items-start justify-between border-b border-gray-100 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold">
+                    <span className="material-symbols-outlined text-xl">edit_note</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-gray-900">Add Manual Vendor / Local AMC Contractor</h3>
+                    <p className="text-xs text-gray-500">Register local offline vendors, AMC service agencies, or custom technicians</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowManualVendorModal(false)}
+                  className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleAddManualVendor} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                    VENDOR / COMPANY NAME *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Royal Security Services / Suresh Electricals"
+                    value={manualVendorForm.name}
+                    onChange={(e) => setManualVendorForm((prev) => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                      SERVICE CATEGORY
+                    </label>
+                    <select
+                      value={manualVendorForm.category}
+                      onChange={(e) => setManualVendorForm((prev) => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                    >
+                      <option value="Security Agency Services">Security Agency Services</option>
+                      <option value="Elevator AMC & Restoral">Elevator AMC & Restoral</option>
+                      <option value="STP & Water Filtration">STP & Water Filtration</option>
+                      <option value="DG Power Backup & Diesel">DG Power Backup & Diesel</option>
+                      <option value="General Electrical & Plumbing">General Electrical & Plumbing</option>
+                      <option value="Landscaping & Gardening">Landscaping & Gardening</option>
+                      <option value="Housekeeping & Pest Control">Housekeeping & Pest Control</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                      MONTHLY PAYOUT (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 25000"
+                      value={manualVendorForm.monthlyPayout}
+                      onChange={(e) => setManualVendorForm((prev) => ({ ...prev, monthlyPayout: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                      CONTACT PERSON / SUPERVISOR
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ramesh Kumar"
+                      value={manualVendorForm.supervisor}
+                      onChange={(e) => setManualVendorForm((prev) => ({ ...prev, supervisor: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                      MOBILE NUMBER
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="+91 98000 12345"
+                      value={manualVendorForm.phone}
+                      onChange={(e) => setManualVendorForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                      BANK ACCOUNT NO. (FOR PAYOUTS)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 501002910291"
+                      value={manualVendorForm.bankAccount}
+                      onChange={(e) => setManualVendorForm((prev) => ({ ...prev, bankAccount: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
+                      BANK IFSC CODE
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. HDFC0001092"
+                      value={manualVendorForm.ifsc}
+                      onChange={(e) => setManualVendorForm((prev) => ({ ...prev, ifsc: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono uppercase text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006b2c]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualVendorModal(false)}
+                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base">check_circle</span>
+                    <span>Register Manual Vendor</span>
+                  </button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
