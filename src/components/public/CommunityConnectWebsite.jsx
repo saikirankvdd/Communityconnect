@@ -57,6 +57,16 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
   const [onboardingSuccess, setOnboardingSuccess] = useState(null);
   const [isOnboardingSubmitting, setIsOnboardingSubmitting] = useState(false);
 
+  const handleSelectTierAndScroll = (tier) => {
+    setSelectedTier(tier);
+    setTimeout(() => {
+      const contractElem = document.getElementById('privacy-contract');
+      if (contractElem) {
+        contractElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  };
+
   // Login Form State
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -1091,7 +1101,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Tier 1: Growth Tier */}
                 <div
-                  onClick={() => setSelectedTier('GROWTH_TIER')}
+                  onClick={() => handleSelectTierAndScroll('GROWTH_TIER')}
                   className={`p-6 rounded-3xl border-2 transition cursor-pointer relative flex flex-col justify-between ${
                     selectedTier === 'GROWTH_TIER'
                       ? 'bg-white border-[#006b2c] ring-2 ring-[#006b2c]/20 shadow-md'
@@ -1107,7 +1117,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                         type="radio"
                         name="saas_plan"
                         checked={selectedTier === 'GROWTH_TIER'}
-                        onChange={() => setSelectedTier('GROWTH_TIER')}
+                        onChange={() => handleSelectTierAndScroll('GROWTH_TIER')}
                         className="text-[#006b2c] focus:ring-[#006b2c]"
                       />
                     </div>
@@ -1148,17 +1158,26 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-gray-100">
-                    <span className={`w-full py-2 rounded-xl text-xs font-bold text-center block ${
-                      selectedTier === 'GROWTH_TIER' ? 'bg-[#006b2c] text-white' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {selectedTier === 'GROWTH_TIER' ? 'Plan Selected' : 'Select Growth Tier'}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectTierAndScroll('GROWTH_TIER');
+                      }}
+                      className={`w-full py-2.5 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        selectedTier === 'GROWTH_TIER'
+                          ? 'bg-[#006b2c] hover:bg-[#00873a] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <span>{selectedTier === 'GROWTH_TIER' ? 'Plan Selected ✓ Proceed to Contract (Step 3 & 4) ↓' : 'Select Growth Tier'}</span>
+                    </button>
                   </div>
                 </div>
 
                 {/* Tier 2: Enterprise Premium Tier */}
                 <div
-                  onClick={() => setSelectedTier('ENTERPRISE_PREMIUM')}
+                  onClick={() => handleSelectTierAndScroll('ENTERPRISE_PREMIUM')}
                   className={`p-6 rounded-3xl border-2 transition cursor-pointer relative flex flex-col justify-between ${
                     selectedTier === 'ENTERPRISE_PREMIUM'
                       ? 'bg-white border-[#006b2c] ring-2 ring-[#006b2c]/20 shadow-md'
@@ -1178,7 +1197,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                         type="radio"
                         name="saas_plan"
                         checked={selectedTier === 'ENTERPRISE_PREMIUM'}
-                        onChange={() => setSelectedTier('ENTERPRISE_PREMIUM')}
+                        onChange={() => handleSelectTierAndScroll('ENTERPRISE_PREMIUM')}
                         className="text-[#006b2c] focus:ring-[#006b2c]"
                       />
                     </div>
@@ -1219,11 +1238,20 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-gray-100">
-                    <span className={`w-full py-2 rounded-xl text-xs font-bold text-center block ${
-                      selectedTier === 'ENTERPRISE_PREMIUM' ? 'bg-[#006b2c] text-white' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {selectedTier === 'ENTERPRISE_PREMIUM' ? 'Plan Selected' : 'Select Enterprise Premium'}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectTierAndScroll('ENTERPRISE_PREMIUM');
+                      }}
+                      className={`w-full py-2.5 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        selectedTier === 'ENTERPRISE_PREMIUM'
+                          ? 'bg-[#006b2c] hover:bg-[#00873a] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <span>{selectedTier === 'ENTERPRISE_PREMIUM' ? 'Plan Selected ✓ Proceed to Contract (Step 3 & 4) ↓' : 'Select Enterprise Premium'}</span>
+                    </button>
                   </div>
                 </div>
               </div>

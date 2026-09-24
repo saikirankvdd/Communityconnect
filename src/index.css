@@ -67,6 +67,21 @@
   h1, h2, h3, .font-display {
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
+
+  button,
+  .button,
+  [role="button"],
+  .cursor-pointer,
+  input[type="button"],
+  input[type="submit"],
+  .select-none-custom,
+  label,
+  summary {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
 }
 
 .bg-ambient-pattern {
