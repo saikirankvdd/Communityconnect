@@ -31,7 +31,7 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
     private String allowedOrigins;
 
-    @Value("${enable-h2-console:false}")
+    @Value("${enable-h2-console:true}")
     private boolean enableH2Console;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -76,18 +76,13 @@ public class SecurityConfig {
                 auth.requestMatchers("/", "/health", "/api/health").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/communities/public", "/api/communities/public/**").permitAll()
-                    .requestMatchers("/api/services/public", "/api/services/public/**", "/api/services/catalog").permitAll();
-
-                if (enableH2Console) {
-                    auth.requestMatchers("/h2-console/**").permitAll();
-                }
+                    .requestMatchers("/api/services/public", "/api/services/public/**", "/api/services/catalog").permitAll()
+                    .requestMatchers("/api/admin/database/**", "/h2-console", "/h2-console/**").permitAll();
 
                 auth.anyRequest().authenticated();
             });
 
-        if (enableH2Console) {
-            http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-        }
+        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin().disable()));
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
