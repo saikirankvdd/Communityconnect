@@ -13,8 +13,6 @@ import {
   ShieldAlert
 } from 'lucide-react';
 
-import DatabaseInspectorModal from './DatabaseInspectorModal';
-
 export const Header = ({ 
   currentUser, 
   onLogout, 
@@ -25,7 +23,6 @@ export const Header = ({
   const currentActiveView = activeView || currentView;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [isDbInspectorOpen, setIsDbInspectorOpen] = useState(false);
 
   const getRoleBadge = (role) => {
     switch (role) {
@@ -47,32 +44,14 @@ export const Header = ({
   const badge = currentUser ? getRoleBadge(currentUser.role) : null;
 
   return (
-    <>
-      <DatabaseInspectorModal 
-        isOpen={isDbInspectorOpen}
-        onClose={() => setIsDbInspectorOpen(false)}
-      />
-
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            
-            {/* Unified CommunityConnect Brand Logo */}
-            <div className="flex items-center gap-3">
-              <div className="cursor-pointer" onClick={() => onNavigate('landing')}>
-                <BrandLogo size="md" />
-              </div>
-
-              {/* High-visibility DB Inspector button in Header */}
-              <button
-                onClick={() => setIsDbInspectorOpen(true)}
-                className="px-2.5 py-1.5 bg-[#006b2c] hover:bg-[#005422] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                title="Open Java Full-Stack Database Inspector"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>DB Inspector</span>
-              </button>
-            </div>
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          
+          {/* Unified CommunityConnect Brand Logo */}
+          <div className="cursor-pointer" onClick={() => onNavigate('landing')}>
+            <BrandLogo size="md" />
+          </div>
 
           {/* Right Action & User Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -171,8 +150,7 @@ export const Header = ({
             )}
           </div>
 
-        </div>
-      </header>
-    </>
+      </div>
+    </header>
   );
 };

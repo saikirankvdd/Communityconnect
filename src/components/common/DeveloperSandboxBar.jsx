@@ -13,8 +13,6 @@ import {
   KeyRound 
 } from 'lucide-react';
 
-import DatabaseInspectorModal from './DatabaseInspectorModal';
-
 export const DeveloperSandboxBar = ({
   currentUser,
   activeView,
@@ -25,47 +23,31 @@ export const DeveloperSandboxBar = ({
   onResetData
 }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [isDbInspectorOpen, setIsDbInspectorOpen] = useState(false);
   const handleLogin = onQuickLogin || onSelectPersona;
   const currentActiveView = activeView || currentView;
 
   return (
-    <>
-      <DatabaseInspectorModal 
-        isOpen={isDbInspectorOpen} 
-        onClose={() => setIsDbInspectorOpen(false)} 
-      />
-
-      <div className="fixed bottom-3 right-3 z-50 max-w-[calc(100vw-24px)] transition-all duration-300">
-        <div className="bg-[#0F172A]/95 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/80 p-3 text-xs">
-          {/* Bar Header */}
-          <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-700/80">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="font-mono font-bold text-[11px] text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5" />
-                <span>ROLE SANDBOX &amp; DEMO PERSONAS</span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setIsDbInspectorOpen(true)}
-                className="px-2 py-1 bg-[#006b2c] hover:bg-[#005422] text-white rounded-lg text-[10px] font-bold flex items-center gap-1 transition shadow cursor-pointer"
-                title="Open Custom Java Full-Stack Database Inspector"
-              >
-                <Layers className="w-3 h-3" />
-                <span>DB Inspector</span>
-              </button>
-
-              <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="p-1 text-slate-400 hover:text-white rounded transition cursor-pointer"
-              >
-                {collapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+    <div className="fixed bottom-3 right-3 z-50 max-w-[calc(100vw-24px)] transition-all duration-300">
+      <div className="bg-[#0F172A]/95 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/80 p-3 text-xs">
+        {/* Bar Header */}
+        <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-700/80">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-mono font-bold text-[11px] text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Terminal className="w-3.5 h-3.5" />
+              <span>ROLE SANDBOX &amp; DEMO PERSONAS</span>
+            </span>
           </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-1 text-slate-400 hover:text-white rounded transition cursor-pointer"
+            >
+              {collapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
 
           {!collapsed && (
             <div className="mt-2.5 space-y-2.5">
@@ -137,6 +119,5 @@ export const DeveloperSandboxBar = ({
           )}
         </div>
       </div>
-    </>
   );
 };

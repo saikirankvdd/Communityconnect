@@ -77,7 +77,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/communities/public", "/api/communities/public/**").permitAll()
                     .requestMatchers("/api/services/public", "/api/services/public/**", "/api/services/catalog").permitAll()
-                    .requestMatchers("/api/admin/database/**", "/h2-console", "/h2-console/**").permitAll();
+                    .requestMatchers("/h2-console", "/h2-console/**").permitAll();
 
                 auth.anyRequest().authenticated();
             });
