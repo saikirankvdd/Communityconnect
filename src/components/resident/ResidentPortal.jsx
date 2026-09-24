@@ -5,6 +5,7 @@ import { communityApi } from '../../api/communityApi';
 import { DuesPaymentModal } from './DuesPaymentModal';
 import { ChatMessengerModal } from './ChatMessengerModal';
 import { CreatePostModal } from './CreatePostModal';
+import { BrandLogo } from '../common/BrandLogo';
 
 // Helper Date Utilities for Gate Passes
 const formatDisplayDate = (isoString, prefix = '') => {
@@ -739,16 +740,8 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
       <aside className="fixed left-0 top-0 h-screen w-72 bg-white z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-r border-[#eaedff] overflow-y-auto">
         <div className="flex flex-col">
           {/* Brand Logo Header */}
-          <div className="h-16 px-4 flex items-center gap-2 bg-white border-b border-[#eaedff]">
-            <img
-              alt="Brand logo"
-              className="h-8 w-auto object-contain"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1VhnPZz3DV1KfbeKBAA-iwYm70znjWBcdBqkWb0Eo6cnMuzSdzwmDkXWV6sozrW72_Z82upH-UVaiUEdIDRPMpX_JMEqtsKKVZbh6IzrSJvCELEKSm6qRYCgDZD10iId5ccAtTaqLb9qSVy89Si7NPUOtvcQdeSAjGCc9Kh8ArhE35Nw5vZTvvHOHHAuCVyjf5Kw-hJK45FX1W3ApK6_XVng79craMgngx5HIsizCuMT9ZgN8eQTHSDhFpg"
-            />
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-[#131b2e] tracking-tight leading-tight">CommunityConnect</span>
-              <span className="text-[10px] text-[#006b2c] font-bold leading-tight uppercase">Resident Portal</span>
-            </div>
+          <div className="h-16 px-5 flex items-center bg-white border-b border-[#eaedff]">
+            <BrandLogo size="md" subtitleText="Resident Portal" />
           </div>
 
           {/* Navigation Section */}
@@ -934,11 +927,9 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
 
             {/* Resident Profile Pill */}
             <div className="flex items-center gap-2 pl-2 bg-[#f2f3ff] p-1 pr-3 rounded-full">
-              <img
-                alt="Resident Profile"
-                className="w-8 h-8 rounded-full object-cover ring-1 ring-[#006b2c]/40"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIQBvi5bl2bzVY_1tTwEDQ6MSTEYLh-Dgm7yX2M3dir8PK2jMQ3vf6hcj8MEiOQKgjAp0xLi8RhtG9gl3QVgzybqc45cGFAqXbGZG5MX1Wb8O7JP5bqQD1lA2ue4RB_0xCiEcM0GBmYBD_P5R5s01QH75gG-Igm3FVh56lUddtFc0LSgl0-LLaBFcPcoCdpvQfIn-Y_GVVmNKc4e8oWtfyp6W3BILcgNckeOkWEyJBlGgW1N2tkcXN7Q"
-              />
+              <div className="w-8 h-8 rounded-full bg-[#006b2c] text-white font-extrabold text-xs flex items-center justify-center shrink-0 uppercase shadow-xs">
+                {(currentUser?.name || 'Arjun Kumar').charAt(0)}
+              </div>
               <div className="flex flex-col text-left">
                 <span className="text-xs font-semibold text-[#131b2e] leading-tight">
                   {currentUser?.name || 'Arjun Kumar'}
@@ -975,11 +966,9 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="relative">
-                      <img
-                        alt="Arjun Kumar"
-                        className="w-16 h-16 rounded-full object-cover shadow-sm ring-2 ring-[#006b2c]/20"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIQBvi5bl2bzVY_1tTwEDQ6MSTEYLh-Dgm7yX2M3dir8PK2jMQ3vf6hcj8MEiOQKgjAp0xLi8RhtG9gl3QVgzybqc45cGFAqXbGZG5MX1Wb8O7JP5bqQD1lA2ue4RB_0xCiEcM0GBmYBD_P5R5s01QH75gG-Igm3FVh56lUddtFc0LSgl0-LLaBFcPcoCdpvQfIn-Y_GVVmNKc4e8oWtfyp6W3BILcgNckeOkWEyJBlGgW1N2tkcXN7Q"
-                      />
+                      <div className="w-16 h-16 rounded-full bg-[#006b2c] text-white font-black text-2xl flex items-center justify-center shrink-0 uppercase shadow-md ring-2 ring-[#006b2c]/20">
+                        {(currentUser?.name || 'Arjun Kumar').charAt(0)}
+                      </div>
                       <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#006b2c] ring-2 ring-white flex items-center justify-center">
                         <span className="material-symbols-outlined text-[10px] text-white">check</span>
                       </span>

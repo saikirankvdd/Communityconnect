@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { serviceApi } from '../../api/serviceApi';
 import { SecurityAccessGrantModal } from './SecurityAccessGrantModal';
 import { DigitalGatePassModal } from '../common/DigitalGatePassModal';
+import { BrandLogo } from '../common/BrandLogo';
 
 export const SecurityGateConsole = ({ currentUser, onNavigate, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, verification, visitors, tasks, reports, hotline
@@ -342,15 +343,7 @@ export const SecurityGateConsole = ({ currentUser, onNavigate, onLogout }) => {
         <div className="flex flex-col gap-4">
           {/* Brand Header */}
           <div className="px-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#006b2c] text-white flex items-center justify-center font-bold">
-                <span className="material-symbols-outlined text-[20px]">shield_person</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-sm text-[#eef0ff] leading-tight">CommunityConnect</span>
-                <span className="text-[10px] text-[#bdcaba] uppercase tracking-wider font-semibold">Security Portal</span>
-              </div>
-            </div>
+            <BrandLogo size="md" subtitleText="Security Portal" inverted={true} />
             {/* Mobile close button */}
             <button
               type="button"

@@ -24,7 +24,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
     title: 'COO • Platform HQ',
     email: 'admin@communityconnect.com',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-comm-bhooja',
@@ -34,7 +34,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     title: 'MC President • My Home Bhooja',
     email: 'president.bhooja@communityconnect.com',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-res-arjun',
@@ -44,7 +44,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
     title: 'Flat A-1204 • My Home Bhooja',
     email: 'arjun.kumar@example.com',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-res-priya',
@@ -54,7 +54,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
     title: 'Flat C-502 • My Home Bhooja',
     email: 'priya.verma@example.com',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-sec-ramsingh',
@@ -64,7 +64,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
     title: 'Gate 1 North Guard',
     email: 'security.gate1@communityconnect.com',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-prov-cool',
@@ -74,7 +74,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
     title: 'Suresh Varma • Partner • AC & Appliance Maintenance',
     email: 'coolingpro.service@example.com',
-    avatar: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-prov-sunita',
@@ -84,7 +84,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
     title: 'Verified Home Cook • Gate OTP Access',
     email: 'sunita.cook@example.com',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-prov-lakshmi',
@@ -94,7 +94,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-teal-100 text-teal-900 border-teal-300',
     title: 'Verified Maid • Biometric Facial Log',
     email: 'lakshmi.maid@example.com',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   },
   {
     id: 'usr-prov-ramesh',
@@ -104,7 +104,7 @@ const EIGHT_QUICK_MEMBERS = [
     badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
     title: 'Verified Driver • Chauffeur Pass',
     email: 'ramesh.driver@example.com',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80'
+    avatar: null
   }
 ];
 

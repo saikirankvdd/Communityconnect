@@ -315,25 +315,9 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
       {/* Fixed Left Navigation Sidebar */}
       <aside className="fixed left-0 top-0 h-screen w-72 bg-white z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-r border-[#eaedff]">
         <div>
-          {/* Brand Header: Crisp CommunityConnect Logo + Properly Formatted Platform Root Super-Admin */}
-          <div className="h-16 px-5 flex items-center gap-3 border-b border-[#eaedff] bg-white">
-            {/* Custom CommunityConnect Vector House Logo Mark matching Community Admin */}
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-[#006b2c] to-[#004d1f] p-1.5 flex items-center justify-center text-white shadow-sm relative overflow-hidden">
-              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                <path d="M18 4L4 15V30C4 31.1 4.9 32 6 32H30C31.1 32 32 31.1 32 30V15L18 4Z" fill="white" />
-                <path d="M14 32V25C14 23.9 14.9 23 16 23H20C21.1 23 22 23.9 22 25V32H14Z" fill="#006b2c" />
-                <circle cx="12.5" cy="14" r="2.8" fill="#0EA5E9" />
-                <path d="M8.5 21C8.5 19.3 10.2 18 12.5 18C14.8 18 16.5 19.3 16.5 21V22H8.5V21Z" fill="#0EA5E9" />
-                <circle cx="23.5" cy="14" r="2.8" fill="#F59E0B" />
-                <path d="M19.5 21C19.5 19.3 21.2 18 23.5 18C25.8 18 27.5 19.3 27.5 21V22H19.5V21Z" fill="#F59E0B" />
-              </svg>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm text-[#131b2e] tracking-tight leading-tight">CommunityConnect</span>
-              <span className="text-[10px] text-[#006b2c] font-bold uppercase tracking-wider">
-                Platform Root Super-Admin
-              </span>
-            </div>
+          {/* Brand Header */}
+          <div className="h-16 px-5 flex items-center border-b border-[#eaedff] bg-white">
+            <BrandLogo size="md" subtitleText="Platform Root Super-Admin" />
           </div>
 
           {/* Navigation Links - Clean 5 Tabs Only */}

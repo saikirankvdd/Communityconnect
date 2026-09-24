@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrandLogo } from './BrandLogo';
 import { 
   Building2, 
   ShieldCheck, 
@@ -47,33 +48,9 @@ export const Header = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo & Brand Tagline (from Reference Images) */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('landing')}>
-            {/* Custom CommunityConnect Icon: Green Home with Interconnected Network Nodes */}
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#15803D] flex items-center justify-center text-white shadow-sm shadow-emerald-500/20">
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <circle cx="9" cy="12" r="1.5" fill="currentColor" />
-                <circle cx="15" cy="12" r="1.5" fill="currentColor" />
-                <circle cx="12" cy="16" r="1.5" fill="currentColor" />
-                <path d="M9 12h6" />
-                <path d="M9 12l3 4 3-4" />
-              </svg>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold font-display tracking-tight text-[#16A34A]">
-                  Community<span className="text-[#0EA5E9]">Connect</span>
-                </span>
-                <span className="hidden md:inline-flex items-center text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Secure • Verified • Scalable
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-500 hidden sm:block">
-                One Platform. Many Communities. Better Living.
-              </p>
-            </div>
+          {/* Unified CommunityConnect Brand Logo */}
+          <div className="cursor-pointer" onClick={() => onNavigate('landing')}>
+            <BrandLogo size="md" />
           </div>
 
           {/* Right Action & User Profile */}

@@ -17,6 +17,7 @@ import { VendorBankAccountsTab } from './VendorBankAccountsTab';
 import { DigitalGatePassCard } from '../common/DigitalGatePassCard';
 import { DigitalGatePassModal } from '../common/DigitalGatePassModal';
 import { CreateGatePassModal } from '../common/CreateGatePassModal';
+import { BrandLogo } from '../common/BrandLogo';
 
 export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, board, gate, maintenance, feed, dues, vendors, banking
@@ -1215,14 +1216,8 @@ export const CommunityAdminConsole = ({ currentUser, onNavigate, onLogout }) => 
       <aside className="fixed left-0 top-0 h-screen w-72 bg-white z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)] select-none border-r border-[#eaedff]">
         <div className="flex flex-col">
           {/* Logo Branding */}
-          <div className="h-16 px-6 flex items-center gap-3 bg-white border-b border-[#eaedff]">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#006b2c] to-[#004d1f] flex items-center justify-center text-white shadow-sm shrink-0">
-              <span className="material-symbols-outlined text-xl">apartment</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm text-[#131b2e] tracking-tight leading-tight">CommunityConnect</span>
-              <span className="text-[10px] text-[#006b2c] font-bold uppercase tracking-wider">Estate Executive Console</span>
-            </div>
+          <div className="h-16 px-5 flex items-center bg-white border-b border-[#eaedff]">
+            <BrandLogo size="md" subtitleText="Estate Executive Console" />
           </div>
 
           {/* Navigation Links */}
