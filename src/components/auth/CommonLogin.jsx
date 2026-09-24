@@ -136,23 +136,26 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate, initialBlockedModalDat
   }, [initialBlockedModalData]);
 
   const handleAuthError = (err) => {
-    if (err.isBlocked || err.message === 'COMMUNITY_FROZEN') {
+    const msg = typeof err === 'string' ? err : (err?.message || '');
+    if (err?.isBlocked || msg === 'COMMUNITY_FROZEN' || msg.includes('FROZEN') || msg.includes('frozen')) {
       setBlockedModalData({
-        communityName: err.communityName || 'Community',
-        reason: err.freezeReason || 'Platform SaaS subscription license renewal is past due.',
-        contactEmail: err.contactEmail || 'support@communityconnect.io',
-        contactPhone: err.contactPhone || '+91 800-266-6864'
+        communityName: err?.communityName || 'Lodha Meridian',
+        reason: err?.freezeReason || 'Annual Platform License Renewal past due by 45 days. Restricted to read-only security safety logs.',
+        contactEmail: err?.contactEmail || 'support@communityconnect.io',
+        contactPhone: err?.contactPhone || '+91 800-266-6864'
       });
-    } else if (err.isPendingApproval || err.message === 'RESIDENT_PENDING_APPROVAL') {
+      setErrorMsg(null);
+    } else if (err?.isPendingApproval || msg === 'RESIDENT_PENDING_APPROVAL' || msg.includes('PENDING_APPROVAL')) {
       setPendingApprovalModalData({
-        communityName: err.communityName || 'Community',
-        flatNumber: err.flatNumber || 'Flat',
-        residentName: err.residentName || 'Resident',
-        contactEmail: err.contactEmail || 'admin@communityconnect.io',
-        contactPhone: err.contactPhone || '+91 800-266-6864'
+        communityName: err?.communityName || 'Community',
+        flatNumber: err?.flatNumber || 'Flat',
+        residentName: err?.residentName || 'Resident',
+        contactEmail: err?.contactEmail || 'admin@communityconnect.io',
+        contactPhone: err?.contactPhone || '+91 800-266-6864'
       });
+      setErrorMsg(null);
     } else {
-      setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');
+      setErrorMsg(msg || 'Authentication failed. Please verify credentials.');
     }
   };
 
@@ -234,9 +237,32 @@ export const CommonLogin = ({ onLoginSuccess, onNavigate, initialBlockedModalDat
 
           {/* Error notice if any */}
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
+            <div 
+              onClick={() => {
+                if (errorMsg.includes('FROZEN') || errorMsg === 'COMMUNITY_FROZEN') {
+                  setBlockedModalData({
+                    communityName: 'Lodha Meridian',
+                    reason: 'Annual Platform License Renewal past due by 45 days. Restricted to read-only security safety logs.',
+                    contactEmail: 'support@communityconnect.io',
+                    contactPhone: '+91 800-266-6864'
+                  });
+                }
+              }}
+              className={`mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between gap-2 ${
+                (errorMsg.includes('FROZEN') || errorMsg === 'COMMUNITY_FROZEN') ? 'cursor-pointer hover:bg-rose-100 transition shadow-2xs' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>
+                  {errorMsg === 'COMMUNITY_FROZEN' ? '🔒 Subscription Frozen / Access Blocked' : errorMsg}
+                </span>
+              </div>
+              {(errorMsg.includes('FROZEN') || errorMsg === 'COMMUNITY_FROZEN') && (
+                <span className="text-[10px] font-bold underline bg-rose-200 text-rose-900 px-2 py-0.5 rounded shrink-0">
+                  View Lock Details &amp; Unfreeze
+                </span>
+              )}
             </div>
           )}
 
