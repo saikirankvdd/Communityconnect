@@ -233,6 +233,13 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
   const [activateError, setActivateError] = useState(null);
   const [activateSuccess, setActivateSuccess] = useState(false);
 
+  // Gateway Payment Modal State
+  const [showOnboardingPaymentModal, setShowOnboardingPaymentModal] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentCancelledNotice, setPaymentCancelledNotice] = useState(null);
+  const [selectedGatewayMethod, setSelectedGatewayMethod] = useState('UPI');
+
+
   // Unique HTML IDs
   const citySelectId = useId();
   const localityInputId = useId();
@@ -304,7 +311,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
     }
   };
 
-  // Handle Onboarding Submission
+  // Handle Onboarding Submission -> Opens Gateway Payment Modal
   const handleOnboardingSubmit = (e) => {
     e.preventDefault();
     if (!communityName.trim()) {
@@ -320,13 +327,25 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
       return;
     }
 
-    setIsOnboardingSubmitting(true);
+    setPaymentCancelledNotice(null);
+    setShowOnboardingPaymentModal(true);
+  };
+
+  // Cancel payment in modal -> returns user back to website onboarding form
+  const handleCancelPayment = () => {
+    setShowOnboardingPaymentModal(false);
+    setPaymentCancelledNotice('Payment was cancelled. You have been returned to your onboarding form with all your details preserved.');
+  };
+
+  // Confirm payment in modal -> provisions workspace and dispatches activation token code via Platform Admin
+  const confirmPaymentAndProvision = () => {
+    setPaymentProcessing(true);
 
     setTimeout(() => {
       const generatedId = `comm-${communityName.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now().toString().slice(-4)}`;
       const schemaName = `schema_${generatedId.replace('comm-', '')}_prod`;
 
-      // Dispatch invite via authApi
+      // Dispatch invite code via authApi (Platform Admin)
       const invite = authApi.createInvitation({
         communityId: generatedId,
         communityName: communityName,
@@ -368,15 +387,17 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
         // Fallback
       }
 
-      setIsOnboardingSubmitting(false);
+      setPaymentProcessing(false);
+      setShowOnboardingPaymentModal(false);
       setOnboardingSuccess({
         community: newCommunityRecord,
         inviteToken: invite.token,
         contractRef: `MSA-CC-${Date.now().toString().slice(-6)}`,
         monthlyFee: effectiveMonthlyFee
       });
-    }, 800);
+    }, 1200);
   };
+
 
   // Handle Token Activation
   const handleActivateInvite = async (e) => {
@@ -968,6 +989,26 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Payment Cancelled Notice Banner */}
+          {paymentCancelledNotice && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-3 shadow-xs animate-in fade-in duration-200">
+              <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <span className="font-extrabold block text-amber-950">Payment Process Cancelled</span>
+                  <span>{paymentCancelledNotice}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentCancelledNotice(null)}
+                className="px-3 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 text-[11px] font-bold rounded-lg transition shrink-0 cursor-pointer"
+              >
+                Dismiss
+              </button>
             </div>
           )}
 
@@ -1927,6 +1968,216 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
                 className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
               >
                 Dismiss &amp; Close Notice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gateway Payment Modal Pop-up */}
+      {showOnboardingPaymentModal && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-gray-200 flex flex-col gap-5 relative overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#006b2c]/10 text-[#006b2c] flex items-center justify-center font-bold">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-extrabold text-gray-900">CommunityConnect Gateway Checkout</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#006b2c] font-bold text-[10px]">256-BIT SSL ENCRYPTED</span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Submit payment to provision <span className="font-semibold text-gray-800">{communityName || 'Gated Community'}</span> &amp; receive code via Platform Admin.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelPayment}
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
+                title="Cancel Payment & Return to Website"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Order Summary Box */}
+            <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-gray-200 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">SELECTED PLAN &amp; TOPOLOGY</span>
+                <div className="text-sm font-extrabold text-gray-900 mt-0.5">
+                  {selectedTier === 'GROWTH_TIER' ? 'Growth Tier (Up to 500 Units)' : 'Enterprise Premium (Unlimited)'}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  📍 {city}, {locality} • {unitsCount} Total Residences
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">TOTAL PAYABLE</span>
+                <div className="text-2xl font-black text-[#006b2c]">
+                  ₹{effectiveMonthlyFee.toLocaleString('en-IN')}
+                </div>
+                <div className="text-[10px] text-gray-500 font-medium">
+                  {billingCycle === 'ANNUAL' ? 'Annual setup fee' : 'Monthly recurring'}
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Admin Code Dispatch Warning */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2.5">
+              <ShieldCheck className="w-5 h-5 text-blue-700 shrink-0" />
+              <div>
+                <span className="font-bold block">Cryptographic Activation Token Notice</span>
+                <span>On completing payment, your cryptographic invitation code is issued via <strong>Platform Admin (Devashish Sen)</strong> and shown on screen for 1-click activation.</span>
+              </div>
+            </div>
+
+            {/* Gateway Payment Tab Selection */}
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-2">
+                SELECT PAYMENT METHOD
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedGatewayMethod('UPI')}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer ${
+                    selectedGatewayMethod === 'UPI'
+                      ? 'border-[#006b2c] bg-emerald-50/60 text-[#006b2c] ring-1 ring-[#006b2c]'
+                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-base">📱</span>
+                  <span>UPI / QR Code</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGatewayMethod('CARD')}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer ${
+                    selectedGatewayMethod === 'CARD'
+                      ? 'border-[#006b2c] bg-emerald-50/60 text-[#006b2c] ring-1 ring-[#006b2c]'
+                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-base">💳</span>
+                  <span>Credit / Debit Card</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGatewayMethod('NETBANKING')}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer ${
+                    selectedGatewayMethod === 'NETBANKING'
+                      ? 'border-[#006b2c] bg-emerald-50/60 text-[#006b2c] ring-1 ring-[#006b2c]'
+                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-base">🏛️</span>
+                  <span>Net Banking / e-NACH</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Gateway Details Card depending on method */}
+            {selectedGatewayMethod === 'UPI' && (
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                <div className="w-24 h-24 bg-white p-2 rounded-xl border border-gray-300 shadow-sm shrink-0 flex items-center justify-center">
+                  <div className="w-full h-full bg-slate-900 rounded-lg p-1 flex flex-col items-center justify-center text-white text-[9px] font-mono leading-tight">
+                    <span>[QR CODE]</span>
+                    <span className="text-[7px] text-emerald-400 mt-1">UPI: cc@icici</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-900 block">Scan QR Code or enter UPI ID</span>
+                  <div className="inline-block bg-white px-2.5 py-1 rounded-lg border border-gray-200 font-mono text-xs font-bold text-gray-800">
+                    communityconnect.b2b@icici
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    Supports Google Pay, PhonePe, Paytm, BHIM, and all BHIM-UPI apps.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedGatewayMethod === 'CARD' && (
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-3">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">CARD NUMBER</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value="4532 •••• •••• 8892"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">EXPIRY</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value="08 / 28"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">CVV</label>
+                    <input
+                      type="password"
+                      readOnly
+                      value="•••"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedGatewayMethod === 'NETBANKING' && (
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
+                <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">CHOOSE CORPORATE BANK</label>
+                <select className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-800">
+                  <option>HDFC Bank Corporate Netbanking</option>
+                  <option>ICICI Corporate Banking (e-NACH Mandate)</option>
+                  <option>State Bank of India (SBI Corporate Portal)</option>
+                  <option>Axis Bank Commercial Banking</option>
+                </select>
+                <p className="text-[11px] text-gray-500 pt-1">
+                  Automated monthly e-NACH mandate will be established under RBI digital mandates.
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons: Cancel vs Pay */}
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={handleCancelPayment}
+                disabled={paymentProcessing}
+                className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl border border-gray-200 transition cursor-pointer disabled:opacity-50"
+              >
+                ← Cancel Payment &amp; Back to Website
+              </button>
+              <button
+                type="button"
+                onClick={confirmPaymentAndProvision}
+                disabled={paymentProcessing}
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-extrabold rounded-xl shadow-md shadow-emerald-700/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+              >
+                {paymentProcessing ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Processing Gateway &amp; Dispatching Code...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Pay ₹{effectiveMonthlyFee.toLocaleString('en-IN')} &amp; Provision Workspace</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
