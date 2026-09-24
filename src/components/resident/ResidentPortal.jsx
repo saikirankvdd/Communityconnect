@@ -78,9 +78,95 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('info');
 
-  // Group Pool States
-  const [acPoolJoined, setAcPoolJoined] = useState(false);
-  const [pestPoolJoined, setPestPoolJoined] = useState(false);
+  // Group Pool States & Sync
+  const [pools, setPools] = useState(() => serviceApi.getPools());
+  const acPool = pools.find((p) => p.id === 'pool-ac-bhooja-sep') || pools[0];
+  const acPoolJoined = Boolean(acPool?.participants?.some((p) => p.residentName === (currentUser?.name || 'Arjun Kumar')));
+
+  // Family Members & Vehicles State
+  const [familyMembers, setFamilyMembers] = useState(() => {
+    const saved = localStorage.getItem('communityconnect_family_members');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return [
+      { id: 'fam-1', name: 'Arjun Kumar', role: 'Primary Owner', access: 'Full Access', isPrimary: true, initials: 'AK', bg: 'bg-[#7ffc97]', text: 'text-[#002109]', phone: '+91 98765 43210' },
+      { id: 'fam-2', name: 'Sneha Kumar', role: 'Spouse', access: 'App Linked', isPrimary: false, initials: 'SK', bg: 'bg-[#c9e6ff]', text: 'text-[#004c6e]', phone: '+91 98765 43211' }
+    ];
+  });
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [newMemberForm, setNewMemberForm] = useState({ name: '', role: 'Spouse', phone: '', access: 'App Linked' });
+
+  const [vehiclePasses, setVehiclePasses] = useState(() => {
+    const saved = localStorage.getItem('communityconnect_vehicle_passes');
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return [
+      { id: 'veh-1', plate: 'TS 09 FH 8120', slot: 'Slot #B2-44', type: '4 Wheeler (SUV)', icon: 'directions_car', status: 'FASTag RFID Active' },
+      { id: 'veh-2', plate: 'TS 07 EK 4412', slot: 'Slot #B2-Bike-12', type: '2 Wheeler (EV)', icon: 'two_wheeler', status: 'Sensor Active' }
+    ];
+  });
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+  const [newVehicleForm, setNewVehicleForm] = useState({ plate: '', slot: '', type: '4 Wheeler (Car)' });
+
+  const handleAddFamilyMember = (e) => {
+    e.preventDefault();
+    if (!newMemberForm.name.trim()) return;
+    const nameParts = newMemberForm.name.trim().split(' ');
+    const initials = (nameParts[0][0] + (nameParts[1] ? nameParts[1][0] : '')).toUpperCase();
+    const newMember = {
+      id: `fam-${Date.now()}`,
+      name: newMemberForm.name.trim(),
+      role: newMemberForm.role,
+      access: newMemberForm.access,
+      phone: newMemberForm.phone || '+91 98000 11223',
+      isPrimary: false,
+      initials,
+      bg: 'bg-[#e2d5ff]',
+      text: 'text-[#32177a]'
+    };
+    const updated = [...familyMembers, newMember];
+    setFamilyMembers(updated);
+    localStorage.setItem('communityconnect_family_members', JSON.stringify(updated));
+    setShowAddMemberModal(false);
+    setNewMemberForm({ name: '', role: 'Spouse', phone: '', access: 'App Linked' });
+    showToast(`Added ${newMember.name} (${newMember.role}) to family passes!`, 'success');
+  };
+
+  const handleRemoveFamilyMember = (id) => {
+    const updated = familyMembers.filter((m) => m.id !== id);
+    setFamilyMembers(updated);
+    localStorage.setItem('communityconnect_family_members', JSON.stringify(updated));
+    showToast('Family member pass removed.', 'info');
+  };
+
+  const handleAddVehicle = (e) => {
+    e.preventDefault();
+    if (!newVehicleForm.plate.trim()) return;
+    const isBike = newVehicleForm.type.toLowerCase().includes('2') || newVehicleForm.type.toLowerCase().includes('bike');
+    const newVehicle = {
+      id: `veh-${Date.now()}`,
+      plate: newVehicleForm.plate.trim().toUpperCase(),
+      slot: newVehicleForm.slot.trim() || `Slot #${isBike ? 'B2-Bike' : 'B2'}-${Math.floor(Math.random() * 80 + 10)}`,
+      type: newVehicleForm.type,
+      icon: isBike ? 'two_wheeler' : 'directions_car',
+      status: 'FASTag RFID Active'
+    };
+    const updated = [...vehiclePasses, newVehicle];
+    setVehiclePasses(updated);
+    localStorage.setItem('communityconnect_vehicle_passes', JSON.stringify(updated));
+    setShowAddVehicleModal(false);
+    setNewVehicleForm({ plate: '', slot: '', type: '4 Wheeler (Car)' });
+    showToast(`Registered vehicle ${newVehicle.plate} with RFID gate pass!`, 'success');
+  };
+
+  const handleRemoveVehicle = (id) => {
+    const updated = vehiclePasses.filter((v) => v.id !== id);
+    setVehiclePasses(updated);
+    localStorage.setItem('communityconnect_vehicle_passes', JSON.stringify(updated));
+    showToast('Vehicle RFID pass revoked.', 'info');
+  };
 
   // Slot Selection states
   const [selectedSlots, setSelectedSlots] = useState({
@@ -249,6 +335,7 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
       notes: joinNotesInput
     });
 
+    setPools(serviceApi.getPools());
     setSelectedPoolForJoinModal(null);
     setJoinTargetBidInput('');
     setJoinNotesInput('');
@@ -1078,15 +1165,16 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                           </span>
                         </div>
                         <p className="text-xs text-[#3e4a3d] mt-1">
-                          <strong>{acPoolJoined ? '19' : '18'} / 20 neighbors joined</strong> from Tower A &amp; B. Unlock group discounted deep clean at ₹499/unit.
+                          <strong>{acPool?.currentParticipants || 18} / {acPool?.minThreshold || 20} neighbors joined</strong> from Tower A &amp; B. Unlock group discounted deep clean at ₹{acPool?.discountedPrice || 499}/unit.
                         </p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        setAcPoolJoined(!acPoolJoined);
-                        showToast(!acPoolJoined ? 'Joined AC Servicing Group Pool! Slot reserved for Oct 14.' : 'Removed from AC group pool.', !acPoolJoined ? 'success' : 'info');
+                        if (acPool) {
+                          setSelectedPoolForJoinModal(acPool);
+                        }
                       }}
                       className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
                         acPoolJoined ? 'bg-emerald-800 text-white' : 'bg-[#006b2c] text-white hover:bg-[#00873a]'
@@ -1236,40 +1324,40 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                           <h3 className="text-sm font-bold text-[#131b2e]">Family Passes</h3>
                         </div>
                         <button
-                          onClick={() => showToast('Member invitation link copied to clipboard!', 'info')}
+                          onClick={() => setShowAddMemberModal(true)}
                           type="button"
-                          className="text-[#006b2c] hover:text-[#00873a] text-xs font-semibold cursor-pointer"
+                          className="text-[#006b2c] hover:text-[#00873a] text-xs font-semibold cursor-pointer hover:underline"
                         >
                           + Add Member
                         </button>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#f2f3ff]">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-[#7ffc97] text-[#002109] flex items-center justify-center text-xs font-bold">
-                              AK
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                        {familyMembers.map((member) => (
+                          <div key={member.id} className="flex items-center justify-between p-2.5 rounded-xl bg-[#f2f3ff]">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-full ${member.bg || 'bg-[#7ffc97]'} ${member.text || 'text-[#002109]'} flex items-center justify-center text-xs font-bold shrink-0`}>
+                                {member.initials || 'FM'}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-[#131b2e]">{member.name}</span>
+                                <span className="text-[10px] text-[#3e4a3d]">{member.role} • {member.access}</span>
+                              </div>
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-[#131b2e]">Arjun Kumar</span>
-                              <span className="text-[10px] text-[#3e4a3d]">Primary Owner • Full Access</span>
+                            <div className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[#006b2c] text-lg">check_circle</span>
+                              {!member.isPrimary && (
+                                <button
+                                  onClick={() => handleRemoveFamilyMember(member.id)}
+                                  title="Remove Member Pass"
+                                  className="text-slate-400 hover:text-red-500 p-1 rounded-lg transition cursor-pointer ml-1"
+                                >
+                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                              )}
                             </div>
                           </div>
-                          <span className="material-symbols-outlined text-[#006b2c] text-lg">check_circle</span>
-                        </div>
-
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#f2f3ff]">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-[#c9e6ff] text-[#004c6e] flex items-center justify-center text-xs font-bold">
-                              SK
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-[#131b2e]">Sneha Kumar</span>
-                              <span className="text-[10px] text-[#3e4a3d]">Spouse • App Linked</span>
-                            </div>
-                          </div>
-                          <span className="material-symbols-outlined text-[#006b2c] text-lg">check_circle</span>
-                        </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1281,40 +1369,38 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                           <h3 className="text-sm font-bold text-[#131b2e]">Vehicle RFID Passes</h3>
                         </div>
                         <button
-                          onClick={() => showToast('Vehicle registration portal ready.', 'info')}
+                          onClick={() => setShowAddVehicleModal(true)}
                           type="button"
-                          className="text-[#006591] hover:text-[#004c6e] text-xs font-semibold cursor-pointer"
+                          className="text-[#006591] hover:text-[#004c6e] text-xs font-semibold cursor-pointer hover:underline"
                         >
                           + Add Vehicle
                         </button>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#f2f3ff]">
-                          <div className="flex items-center gap-2.5">
-                            <span className="material-symbols-outlined text-[#131b2e] text-xl">directions_car</span>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-[#131b2e] font-mono">TS 09 FH 8120</span>
-                              <span className="text-[10px] text-[#3e4a3d]">Slot #B2-44 • FASTag RFID Active</span>
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                        {vehiclePasses.map((veh) => (
+                          <div key={veh.id} className="flex items-center justify-between p-2.5 rounded-xl bg-[#f2f3ff]">
+                            <div className="flex items-center gap-2.5">
+                              <span className="material-symbols-outlined text-[#131b2e] text-xl shrink-0">{veh.icon || 'directions_car'}</span>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-[#131b2e] font-mono">{veh.plate}</span>
+                                <span className="text-[10px] text-[#3e4a3d]">{veh.slot} • {veh.status || 'Active'}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-full bg-[#7ffc97]/50 text-[#002109] text-[10px] font-bold">
+                                Active
+                              </span>
+                              <button
+                                onClick={() => handleRemoveVehicle(veh.id)}
+                                title="Revoke Vehicle Pass"
+                                className="text-slate-400 hover:text-red-500 p-1 rounded-lg transition cursor-pointer ml-1"
+                              >
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                              </button>
                             </div>
                           </div>
-                          <span className="px-2 py-0.5 rounded-full bg-[#7ffc97]/50 text-[#002109] text-[10px] font-bold">
-                            Active
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#f2f3ff]">
-                          <div className="flex items-center gap-2.5">
-                            <span className="material-symbols-outlined text-[#131b2e] text-xl">two_wheeler</span>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-[#131b2e] font-mono">TS 07 EK 4412</span>
-                              <span className="text-[10px] text-[#3e4a3d]">Slot #B2-Bike-12 • Sensor Active</span>
-                            </div>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-full bg-[#7ffc97]/50 text-[#002109] text-[10px] font-bold">
-                            Active
-                          </span>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -3513,6 +3599,177 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                   className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
                 >
                   Broadcast Staff Requirement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Family Member Modal */}
+      {showAddMemberModal && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-100 flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-50 text-[#006b2c]">
+                  <span className="material-symbols-outlined text-xl">person_add</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Add Household / Family Member</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddMemberModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddFamilyMember} className="space-y-3.5">
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newMemberForm.name}
+                  onChange={(e) => setNewMemberForm({ ...newMemberForm, name: e.target.value })}
+                  placeholder="e.g. Ramesh Kumar"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#006b2c]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Relationship</label>
+                  <select
+                    value={newMemberForm.role}
+                    onChange={(e) => setNewMemberForm({ ...newMemberForm, role: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#006b2c]"
+                  >
+                    <option value="Spouse">Spouse</option>
+                    <option value="Parent">Parent / Elderly</option>
+                    <option value="Child">Son / Daughter</option>
+                    <option value="Tenant">Co-Tenant</option>
+                    <option value="Flatmate">Flatmate</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Access Level</label>
+                  <select
+                    value={newMemberForm.access}
+                    onChange={(e) => setNewMemberForm({ ...newMemberForm, access: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#006b2c]"
+                  >
+                    <option value="App Linked">App Linked (Full)</option>
+                    <option value="Biometric Only">Gate Biometric Only</option>
+                    <option value="Emergency Pass">Emergency Pass</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Phone Number (Optional)</label>
+                <input
+                  type="tel"
+                  value={newMemberForm.phone}
+                  onChange={(e) => setNewMemberForm({ ...newMemberForm, phone: e.target.value })}
+                  placeholder="+91 98765 00000"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#006b2c]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddMemberModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Save &amp; Generate Pass
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Vehicle Modal */}
+      {showAddVehicleModal && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[99999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-100 flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-sky-50 text-[#006591]">
+                  <span className="material-symbols-outlined text-xl">directions_car</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Register Vehicle RFID Pass</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddVehicleModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddVehicle} className="space-y-3.5">
+              <div>
+                <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Registration Plate No. *</label>
+                <input
+                  type="text"
+                  required
+                  value={newVehicleForm.plate}
+                  onChange={(e) => setNewVehicleForm({ ...newVehicleForm, plate: e.target.value })}
+                  placeholder="e.g. TS 09 EA 9988"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 font-mono focus:bg-white focus:ring-2 focus:ring-[#006591]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Vehicle Type</label>
+                  <select
+                    value={newVehicleForm.type}
+                    onChange={(e) => setNewVehicleForm({ ...newVehicleForm, type: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#006591]"
+                  >
+                    <option value="4 Wheeler (Car)">4 Wheeler (Car/SUV)</option>
+                    <option value="2 Wheeler (EV)">2 Wheeler (EV Scooter)</option>
+                    <option value="2 Wheeler (Bike)">2 Wheeler (Motorcycle)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-700 uppercase block mb-1">Designated Slot No.</label>
+                  <input
+                    type="text"
+                    value={newVehicleForm.slot}
+                    onChange={(e) => setNewVehicleForm({ ...newVehicleForm, slot: e.target.value })}
+                    placeholder="e.g. Slot #B2-45"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#006591]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddVehicleModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#006591] hover:bg-[#004c6e] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Activate FASTag RFID
                 </button>
               </div>
             </form>
