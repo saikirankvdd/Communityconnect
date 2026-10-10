@@ -58,6 +58,8 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [selectedCommForFreeze, setSelectedCommForFreeze] = useState(null);
   const [freezeReasonInput, setFreezeReasonInput] = useState('Monthly platform SaaS license past due by 30 days.');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCommForDelete, setSelectedCommForDelete] = useState(null);
 
   // Tenant Inspector Modal
   const [inspectModalComm, setInspectModalComm] = useState(null);
@@ -120,6 +122,51 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
     showToast(`Tenant isolation freeze applied to ${selectedCommForFreeze.name}. Access blocked across login and live portals!`, 'error');
     if (inspectModalComm && inspectModalComm.id === selectedCommForFreeze.id) {
       setInspectModalComm({ ...inspectModalComm, status: 'FROZEN', freezeReason: freezeReasonInput });
+    }
+  };
+
+  const handleApproveCommunity = (comm) => {
+    try {
+      communityApi.approveCommunity(comm.id);
+      refreshCommunities();
+      showToast(`Payment & details verified for ${comm.name}! Society officially approved & joined to platform.`, 'success');
+      if (inspectModalComm && inspectModalComm.id === comm.id) {
+        setInspectModalComm({ ...inspectModalComm, status: 'ACTIVE', subscriptionStatus: 'ACTIVE' });
+      }
+    } catch (err) {
+      showToast(`Failed to approve society: ${err.message}`, 'error');
+    }
+  };
+
+  const handleRejectCommunity = (comm) => {
+    try {
+      communityApi.rejectCommunity(comm.id, 'Payment verification failed or details incomplete.');
+      refreshCommunities();
+      showToast(`Onboarding request for ${comm.name} has been rejected.`, 'error');
+      if (inspectModalComm && inspectModalComm.id === comm.id) {
+        setInspectModalComm({ ...inspectModalComm, status: 'REJECTED' });
+      }
+    } catch (err) {
+      showToast(`Failed to reject society: ${err.message}`, 'error');
+    }
+  };
+
+  const handleDeleteClick = (comm) => {
+    setSelectedCommForDelete(comm);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteCommunity = () => {
+    if (!selectedCommForDelete) return;
+    try {
+      communityApi.deleteCommunity(selectedCommForDelete.id);
+      refreshCommunities();
+      setInvitations(authApi.getInvitations());
+      showToast(`${selectedCommForDelete.name} has been permanently deleted from the platform.`, 'error');
+      setShowDeleteModal(false);
+      setSelectedCommForDelete(null);
+    } catch (err) {
+      showToast(`Failed to delete society: ${err.message}`, 'error');
     }
   };
 
@@ -282,6 +329,7 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
 
     if (tenantFilter === 'ACTIVE') return c.status === 'ACTIVE';
     if (tenantFilter === 'FROZEN') return c.status === 'FROZEN';
+    if (tenantFilter === 'PENDING') return c.status === 'PENDING_APPROVAL';
     if (tenantFilter === 'ENTERPRISE') return c.plan === 'ENTERPRISE_PREMIUM';
     if (tenantFilter === 'GROWTH') return c.plan === 'GROWTH_TIER';
     return true;
@@ -295,6 +343,7 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
   const totalInflow = totalSubscriptionMRR;
   const activeCount = communities.filter((c) => c.status === 'ACTIVE').length;
   const frozenCount = communities.filter((c) => c.status === 'FROZEN').length;
+  const pendingCount = communities.filter((c) => c.status === 'PENDING_APPROVAL').length;
   const enterpriseCount = communities.filter((c) => c.plan === 'ENTERPRISE_PREMIUM').length;
   const compliantCount = communities.filter((c) => (c.privacyPolicyStatus || 'ACCEPTED') === 'ACCEPTED').length;
 
@@ -716,7 +765,7 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
                     </div>
 
                     <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                      {['ALL', 'ACTIVE', 'FROZEN', 'ENTERPRISE', 'GROWTH'].map((filter) => (
+                      {['ALL', 'ACTIVE', 'PENDING', 'FROZEN', 'ENTERPRISE', 'GROWTH'].map((filter) => (
                         <button
                           key={filter}
                           onClick={() => setTenantFilter(filter)}
@@ -726,7 +775,7 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
                               : 'text-gray-500 hover:text-gray-900'
                           }`}
                         >
-                          {filter}
+                          {filter === 'PENDING' ? `PENDING (${pendingCount})` : filter}
                         </button>
                       ))}
                     </div>
@@ -842,12 +891,26 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
 
                           <td className="py-3.5 px-4">
                             {comm.status === 'ACTIVE' ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                 ACTIVE
                               </span>
+                            ) : comm.status === 'PENDING_APPROVAL' ? (
+                              <div>
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-300">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                                  PENDING APPROVAL
+                                </span>
+                                <div className="text-[10px] text-amber-700 mt-0.5 font-mono">
+                                  {comm.paymentTxnId || 'Payment Received'}
+                                </div>
+                              </div>
+                            ) : comm.status === 'REJECTED' ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold border border-gray-300">
+                                REJECTED
+                              </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 text-[10px] font-bold">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 text-[10px] font-bold border border-rose-200">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                 FROZEN
                               </span>
@@ -861,24 +924,56 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
 
                           <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => setInspectModalComm(comm)}
-                                className="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[#006b2c] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition cursor-pointer flex items-center gap-1"
-                                title="Inspect Enclave Contract & Privacy Compliance"
-                              >
-                                <span className="material-symbols-outlined text-sm">policy</span>
-                                <span>Inspect</span>
-                              </button>
+                              {comm.status === 'PENDING_APPROVAL' ? (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveCommunity(comm)}
+                                    className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#006b2c] hover:bg-[#00873a] shadow-xs transition cursor-pointer flex items-center gap-1"
+                                    title="Verify Payment & Approve Society to Join Platform"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                    <span>Check &amp; Approve</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleRejectCommunity(comm)}
+                                    className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition cursor-pointer"
+                                    title="Reject Onboarding Request"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => setInspectModalComm(comm)}
+                                    className="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-[#006b2c] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition cursor-pointer flex items-center gap-1"
+                                    title="Inspect Enclave Contract & Privacy Compliance"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">policy</span>
+                                    <span>Inspect</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleToggleFreeze(comm)}
+                                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                      comm.status === 'ACTIVE'
+                                        ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                    }`}
+                                  >
+                                    {comm.status === 'ACTIVE' ? 'Freeze' : 'Unfreeze'}
+                                  </button>
+                                </>
+                              )}
 
                               <button
-                                onClick={() => handleToggleFreeze(comm)}
-                                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                                  comm.status === 'ACTIVE'
-                                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
-                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                                }`}
+                                onClick={() => handleDeleteClick(comm)}
+                                className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition cursor-pointer flex items-center gap-1"
+                                title="Permanently Delete Society"
                               >
-                                {comm.status === 'ACTIVE' ? 'Freeze' : 'Unfreeze'}
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                                <span>Delete</span>
                               </button>
                             </div>
                           </td>
@@ -1710,17 +1805,32 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
 
             {/* Modal Actions */}
             <div className="pt-4 mt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => handleToggleFreeze(inspectModalComm)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer ${
-                  inspectModalComm.status === 'ACTIVE'
-                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
-                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
-                }`}
-              >
-                {inspectModalComm.status === 'ACTIVE' ? 'Quarantine & Freeze Tenant' : 'Restore & Unfreeze Tenant'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleToggleFreeze(inspectModalComm)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer ${
+                    inspectModalComm.status === 'ACTIVE'
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  }`}
+                >
+                  {inspectModalComm.status === 'ACTIVE' ? 'Quarantine & Freeze Tenant' : 'Restore & Unfreeze Tenant'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = inspectModalComm;
+                    setInspectModalComm(null);
+                    handleDeleteClick(target);
+                  }}
+                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition cursor-pointer flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                  <span>Delete Society</span>
+                </button>
+              </div>
 
               <div className="flex items-center gap-2">
                 <button
@@ -2064,6 +2174,46 @@ export const PlatformMasterConsole = ({ currentUser, onNavigate, onLogout }) => 
                 className="px-5 py-2.5 bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs"
               >
                 Got It, Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedCommForDelete && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-red-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-2xl">delete_forever</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">
+              Delete {selectedCommForDelete.name}?
+            </h3>
+            <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-gray-900">{selectedCommForDelete.name}</strong> from the multi-tenant platform?
+              <br />
+              <span className="text-red-600 font-semibold block mt-1">⚠️ Warning: This will remove all database partition metadata, administrative invites, and isolated tenant records. This action cannot be undone.</span>
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedCommForDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteCommunity}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition shadow-md cursor-pointer flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm">delete</span>
+                <span>Permanently Delete</span>
               </button>
             </div>
           </div>

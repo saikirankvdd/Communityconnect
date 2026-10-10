@@ -364,10 +364,13 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
         type: communityType,
         totalUnits: Number(unitsCount),
         towers: Math.max(1, Math.ceil(unitsCount / 120)),
-        status: 'ACTIVE',
+        status: 'PENDING_APPROVAL',
         plan: selectedTier,
         subscriptionFee: effectiveMonthlyFee,
-        subscriptionStatus: 'ACTIVE',
+        subscriptionStatus: 'PAYMENT_UNDER_REVIEW',
+        paymentTxnId: `TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        paymentAmount: `₹${effectiveMonthlyFee.toLocaleString('en-IN')}/mo`,
+        paymentDate: new Date().toISOString().split('T')[0],
         privacyPolicyStatus: 'ACCEPTED',
         dpdpCompliant: true,
         schemaId: schemaName,
@@ -383,6 +386,7 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
         const storedCommRaw = localStorage.getItem('communityconnect_communities');
         const list = storedCommRaw ? JSON.parse(storedCommRaw) : INITIAL_COMMUNITIES;
         localStorage.setItem('communityconnect_communities', JSON.stringify([newCommunityRecord, ...list]));
+        window.dispatchEvent(new CustomEvent('communityconnect_communities_updated', { detail: newCommunityRecord }));
       } catch {
         // Fallback
       }
@@ -939,52 +943,44 @@ export const CommunityConnectWebsite = ({ onLoginSuccess, onNavigate }) => {
 
           {/* Success Banner if Onboarded */}
           {onboardingSuccess && (
-            <div className="mb-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-50 to-[#e8f5e9] border-2 border-emerald-300 text-emerald-950 shadow-lg animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-50 via-emerald-50 to-[#e8f5e9] border-2 border-amber-300 text-emerald-950 shadow-lg animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#006b2c] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold uppercase tracking-wider">
-                      ENCLAVE PROVISIONED SUCCESSFULLY
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-extrabold uppercase tracking-wider">
+                      ONBOARDING REQUEST & PAYMENT SUBMITTED (PENDING ADMIN APPROVAL)
                     </span>
                     <span className="text-xs text-gray-500">•</span>
                     <span className="text-xs font-mono font-bold text-gray-700">Ref: {onboardingSuccess.contractRef}</span>
                   </div>
                   <h3 className="text-xl font-extrabold text-gray-900 mt-1">
-                    Welcome, {onboardingSuccess.community.name}!
+                    Onboarding Request Received for {onboardingSuccess.community.name}!
                   </h3>
                   <p className="text-xs text-gray-700 mt-1 leading-relaxed">
-                    Your isolated PostgreSQL namespace <strong className="font-mono text-[#006b2c]">{onboardingSuccess.community.schemaId}</strong> is provisioned. A Master Service Agreement has been registered at ₹{onboardingSuccess.monthlyFee.toLocaleString('en-IN')}/mo under India's DPDP Act 2023.
+                    Your payment details (Txn: <strong className="font-mono text-amber-800">{onboardingSuccess.community.paymentTxnId}</strong>) and contract terms for namespace <strong className="font-mono text-[#006b2c]">{onboardingSuccess.community.schemaId}</strong> have been submitted.
+                    <br />
+                    <strong>Next Step:</strong> The Platform Super Admin will verify your payment and details. Once approved, your society will be officially joined & activated!
                   </p>
 
-                  <div className="mt-4 p-3.5 bg-white rounded-2xl border border-emerald-200 text-xs">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
-                      CRYPTOGRAPHIC ONBOARDING TOKEN (DISPATCHED TO {onboardingSuccess.community.presidentEmail})
+                  <div className="mt-4 p-3.5 bg-white rounded-2xl border border-amber-200 text-xs">
+                    <span className="text-[10px] uppercase font-bold text-gray-500 block mb-1">
+                      CRYPTOGRAPHIC INVITATION TOKEN (DISPATCHED TO {onboardingSuccess.community.presidentEmail})
                     </span>
-                    <div className="font-mono text-emerald-800 text-xs sm:text-sm font-bold break-all bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200">
+                    <div className="font-mono text-amber-900 text-xs sm:text-sm font-bold break-all bg-amber-50/70 p-2.5 rounded-xl border border-amber-200">
                       {onboardingSuccess.inviteToken}
                     </div>
                   </div>
 
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     <button
-                      onClick={() => {
-                        setInviteTokenInput(onboardingSuccess.inviteToken);
-                        setShowActivateModal(true);
-                      }}
+                      onClick={() => setShowLoginModal(true)}
                       className="px-5 py-2.5 bg-[#006b2c] hover:bg-[#00873a] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                     >
                       <KeyRound className="w-3.5 h-3.5" />
-                      <span>Activate Account &amp; Set Password Now</span>
-                    </button>
-
-                    <button
-                      onClick={() => setShowLoginModal(true)}
-                      className="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-800 text-xs font-bold rounded-xl border border-gray-300 transition cursor-pointer"
-                    >
-                      Proceed to Portal Sign In
+                      <span>Platform Admin Login (To Check & Approve)</span>
                     </button>
                   </div>
                 </div>

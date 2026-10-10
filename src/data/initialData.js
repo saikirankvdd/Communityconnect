@@ -126,6 +126,34 @@ export const INITIAL_COMMUNITIES = [
     description: 'Twin tower luxury enclave with sky decks and automated car parking.',
     imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
     onboardedDate: '2024-11-20'
+  },
+  {
+    id: 'comm-greenwood',
+    name: 'Greenwood Heights Township',
+    area: 'Financial District',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    pincode: '500032',
+    address: 'Plot 42, Financial District, Nanakramguda, Hyderabad',
+    type: 'Luxury Gated Township',
+    towers: 6,
+    totalUnits: 640,
+    occupiedUnits: 0,
+    amenitiesCount: 40,
+    status: 'PENDING_APPROVAL',
+    plan: 'ENTERPRISE_PREMIUM',
+    subscriptionStatus: 'PAYMENT_UNDER_REVIEW',
+    subscriptionFee: 65000,
+    paymentTxnId: 'TXN-PAY-88492019',
+    paymentAmount: '₹65,000 / month',
+    paymentDate: '2026-10-10',
+    presidentName: 'Anil Kumar Sharma',
+    presidentEmail: 'anil.kumar@greenwoodheights.org',
+    presidentPhone: '+91 98765 43210',
+    securityGatePhone: '+91 98765 00111',
+    description: 'Newly onboarded society awaiting Platform Super Admin payment check and approval.',
+    imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
+    onboardedDate: '2026-10-10'
   }
 ];
 

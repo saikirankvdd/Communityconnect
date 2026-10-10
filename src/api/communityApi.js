@@ -133,6 +133,64 @@ export const communityApi = {
     return target;
   },
 
+  // Approve pending community onboarding request
+  approveCommunity(id) {
+    const list = getStoredCommunities();
+    const target = list.find((c) => c.id === id);
+    if (!target) throw new Error('Community not found');
+
+    target.status = 'ACTIVE';
+    target.subscriptionStatus = 'ACTIVE';
+    target.paymentVerified = true;
+    delete target.freezeReason;
+    delete target.rejectReason;
+
+    localStorage.setItem(COMMUNITIES_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_communities_updated', { detail: target }));
+    } catch {}
+    return target;
+  },
+
+  // Reject pending community onboarding request
+  rejectCommunity(id, reason = 'Payment verification failed or incomplete documentation.') {
+    const list = getStoredCommunities();
+    const target = list.find((c) => c.id === id);
+    if (!target) throw new Error('Community not found');
+
+    target.status = 'REJECTED';
+    target.subscriptionStatus = 'REJECTED';
+    target.rejectReason = reason;
+
+    localStorage.setItem(COMMUNITIES_STORAGE_KEY, JSON.stringify(list));
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_communities_updated', { detail: target }));
+    } catch {}
+    return target;
+  },
+
+  // Delete community permanently from multi-tenant platform
+  deleteCommunity(id) {
+    let list = getStoredCommunities();
+    const target = list.find((c) => c.id === id);
+    if (!target) throw new Error('Community not found');
+
+    list = list.filter((c) => c.id !== id);
+    localStorage.setItem(COMMUNITIES_STORAGE_KEY, JSON.stringify(list));
+
+    // Cleanup associated invitations
+    try {
+      let invList = getStoredInvitations();
+      invList = invList.filter((i) => i.communityId !== id);
+      localStorage.setItem(INVITATIONS_STORAGE_KEY, JSON.stringify(invList));
+    } catch {}
+
+    try {
+      window.dispatchEvent(new CustomEvent('communityconnect_communities_updated', { detail: { id, deleted: true } }));
+    } catch {}
+    return list;
+  },
+
   // GET /api/admin/invitations
   getInvitations() {
     return getStoredInvitations();
