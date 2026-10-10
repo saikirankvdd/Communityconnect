@@ -121,12 +121,24 @@ export const SecurityGateConsole = ({ currentUser, onNavigate, onLogout }) => {
     window.addEventListener('communityconnect_kyc_updated', handleDirectiveSync);
     window.addEventListener('storage', handleSync);
     window.addEventListener('storage', handleDirectiveSync);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowOtpModal(false);
+        setShowRapidPassModal(false);
+        setSelectedChecklistDirective(null);
+        setSelectedEvidenceDirective(null);
+        setSelectedParkingCase(null);
+        setShowEmergencyAlertModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('communityconnect_visitor_updated', handleSync);
       window.removeEventListener('communityconnect_security_directive_updated', handleDirectiveSync);
       window.removeEventListener('communityconnect_kyc_updated', handleDirectiveSync);
       window.removeEventListener('storage', handleSync);
       window.removeEventListener('storage', handleDirectiveSync);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 

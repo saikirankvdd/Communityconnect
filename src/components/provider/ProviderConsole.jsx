@@ -115,11 +115,24 @@ export const ProviderConsole = ({ currentUser, onNavigate, onLogout }) => {
     window.addEventListener('communityconnect_requests_updated', handleSync);
     window.addEventListener('communityconnect_staff_updated', handleSync);
     window.addEventListener('storage', handleSync);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedPoolForBid(null);
+        setSelectedCrewForPayout(null);
+        setShowCreatePermitModal(false);
+        setShowAddCrewModal(false);
+        setApplicationSentModalData(null);
+        setShowPasscodeSubmitModal(false);
+        setRespondingRequest(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('communityconnect_pools_updated', handleSync);
       window.removeEventListener('communityconnect_requests_updated', handleSync);
       window.removeEventListener('communityconnect_staff_updated', handleSync);
       window.removeEventListener('storage', handleSync);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 

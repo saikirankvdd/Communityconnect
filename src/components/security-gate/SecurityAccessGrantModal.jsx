@@ -45,6 +45,14 @@ export const SecurityAccessGrantModal = ({
     onClose();
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && onClose) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 bg-[#131b2e]/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-emerald-200 flex flex-col overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-150">
@@ -176,9 +184,10 @@ export const SecurityAccessGrantModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer flex items-center gap-1"
             >
-              Cancel
+              <span className="material-symbols-outlined text-sm">close</span>
+              <span>Cancel &amp; Exit Clearance</span>
             </button>
 
             <button

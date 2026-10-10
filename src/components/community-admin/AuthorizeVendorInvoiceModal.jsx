@@ -24,6 +24,14 @@ export const AuthorizeVendorInvoiceModal = ({ isOpen, onClose, invoice, onConfir
     onClose();
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && onClose) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 bg-[#131b2e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#eaedff] flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
@@ -125,9 +133,10 @@ export const AuthorizeVendorInvoiceModal = ({ isOpen, onClose, invoice, onConfir
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-[#6e7b6c] hover:bg-gray-100 rounded-xl font-bold cursor-pointer text-xs"
+            className="px-4 py-2 text-[#6e7b6c] hover:bg-gray-100 rounded-xl font-bold cursor-pointer text-xs flex items-center gap-1"
           >
-            Cancel
+            <span className="material-symbols-outlined text-sm">close</span>
+            <span>Cancel &amp; Exit Authorization</span>
           </button>
           <button
             type="button"

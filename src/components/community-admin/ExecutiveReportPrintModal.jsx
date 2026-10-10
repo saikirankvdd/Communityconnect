@@ -21,6 +21,14 @@ export const ExecutiveReportPrintModal = ({
     showToast('Executive Financial Audit sent to printer.', 'success');
   };
 
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && onClose) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 bg-[#131b2e]/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:fixed-none">
       <div className="bg-white rounded-2xl max-w-4xl w-full p-8 shadow-2xl border border-[#eaedff] flex flex-col gap-6 max-h-[92vh] overflow-y-auto print:max-h-none print:shadow-none print:border-none print:p-4">
@@ -54,9 +62,10 @@ export const ExecutiveReportPrintModal = ({
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-[#6e7b6c] hover:text-[#131b2e] rounded-full cursor-pointer hover:bg-gray-100"
+              className="flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
             >
-              <span className="material-symbols-outlined text-xl">close</span>
+              <span className="material-symbols-outlined text-base">logout</span>
+              <span>Exit Print Preview</span>
             </button>
           </div>
         </div>

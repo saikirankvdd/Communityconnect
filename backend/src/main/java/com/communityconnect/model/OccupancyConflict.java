@@ -28,6 +28,12 @@ public class OccupancyConflict {
     @Column(name = "security_report", columnDefinition = "TEXT")
     private String securityReport;
 
+    @Column(name = "resolution_notes", columnDefinition = "TEXT")
+    private String resolutionNotes;
+
+    @Column(name = "resolved_by_admin_id")
+    private String resolvedByAdminId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

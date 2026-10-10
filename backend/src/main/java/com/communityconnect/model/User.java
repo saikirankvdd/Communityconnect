@@ -35,6 +35,15 @@ public class User {
     @Column(name = "flat_id")
     private String flatId;
 
+    @Column(name = "privacy_consent_given", nullable = false)
+    private boolean privacyConsentGiven = true;
+
+    @Column(name = "consent_timestamp")
+    private LocalDateTime consentTimestamp = LocalDateTime.now();
+
+    @Column(name = "terms_version")
+    private String termsVersion = "v1.0";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

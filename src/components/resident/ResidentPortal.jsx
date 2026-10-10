@@ -277,7 +277,27 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
   const [staffRequests, setStaffRequests] = useState(() => serviceApi.getStaffRequests(currentUser?.communityId));
   const [showCreateStaffModal, setShowCreateStaffModal] = useState(false);
   const [approvedSuccessModalData, setApprovedSuccessModalData] = useState(null);
+  const [activeAmenityPassModal, setActiveAmenityPassModal] = useState(null);
   const [newStaffType, setNewStaffType] = useState('Cook');
+
+  // ESC Key Listener to allow instant exit from any active modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedPoolForJoinModal(null);
+        setSelectedPostForOffer(null);
+        setShowTicketModal(false);
+        setShowCreateStaffModal(false);
+        setShowAddMemberModal(false);
+        setShowAddVehicleModal(false);
+        setApprovedSuccessModalData(null);
+        setActiveAmenityPassModal(null);
+        setShowPaymentModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [newStaffTitle, setNewStaffTitle] = useState('');
   const [newStaffBudget, setNewStaffBudget] = useState('4200');
   const [newStaffTimeSlot, setNewStaffTimeSlot] = useState('07:30 AM - 09:00 AM');
@@ -3349,11 +3369,29 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                     </div>
                   </div>
 
-                  <div className="p-6 pt-0">
+                  <div className="p-6 pt-0 flex gap-2">
+                    {selectedSlots.badminton && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSlots({ ...selectedSlots, badminton: '' })}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => showToast(`Badminton (${selectedSlots.badminton}) reserved! QR pass issued for turnstile.`, 'success')}
-                      className="w-full py-2 bg-[#006b2c] text-white rounded-xl text-xs font-bold hover:bg-[#00873a] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      onClick={() => {
+                        setActiveAmenityPassModal({
+                          type: 'badminton',
+                          title: 'Indoor Badminton Court 2',
+                          slot: selectedSlots.badminton,
+                          passCode: 'PASS-BADMINTON-' + Math.floor(1000 + Math.random() * 8999),
+                          unit: currentUser?.unit || 'Flat A-1204'
+                        });
+                        showToast(`Badminton (${selectedSlots.badminton}) pass issued!`, 'success');
+                      }}
+                      className="flex-1 py-2 bg-[#006b2c] text-white rounded-xl text-xs font-bold hover:bg-[#00873a] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <span className="material-symbols-outlined text-base">bookmark_added</span>
                       <span>Confirm Reservation</span>
@@ -3378,9 +3416,20 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                     </p>
 
                     <div className="mt-4">
-                      <label className="text-[10px] text-[#6e7b6c] uppercase font-bold block mb-1.5">
-                        Select Available Slot
-                      </label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[10px] text-[#6e7b6c] uppercase font-bold block">
+                          Select Available Slot
+                        </label>
+                        {selectedSlots.pool && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSlots({ ...selectedSlots, pool: '' })}
+                            className="text-[10px] text-red-600 font-bold hover:underline cursor-pointer"
+                          >
+                            Clear Selection
+                          </button>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {['Morning 06:30 AM', 'Morning 07:30 AM', 'Evening 05:30 PM', 'Evening 06:30 PM'].map(slot => (
                           <button
@@ -3400,11 +3449,29 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                     </div>
                   </div>
 
-                  <div className="p-6 pt-0">
+                  <div className="p-6 pt-0 flex gap-2">
+                    {selectedSlots.pool && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSlots({ ...selectedSlots, pool: '' })}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => showToast(`Swimming Pool pass (${selectedSlots.pool}) generated for Arjun Kumar!`, 'success')}
-                      className="w-full py-2 bg-[#006591] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      onClick={() => {
+                        setActiveAmenityPassModal({
+                          type: 'pool',
+                          title: 'Swimming Pool & Kids Jacuzzi',
+                          slot: selectedSlots.pool,
+                          passCode: 'PASS-POOL-' + Math.floor(1000 + Math.random() * 8999),
+                          unit: currentUser?.unit || 'Flat A-1204'
+                        });
+                        showToast(`Swimming Pool pass (${selectedSlots.pool}) generated!`, 'success');
+                      }}
+                      className="flex-1 py-2 bg-[#006591] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <span className="material-symbols-outlined text-base">bookmark_added</span>
                       <span>Confirm Reservation</span>
@@ -3429,9 +3496,20 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                     </p>
 
                     <div className="mt-4">
-                      <label className="text-[10px] text-[#6e7b6c] uppercase font-bold block mb-1.5">
-                        Select Day / Session
-                      </label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[10px] text-[#6e7b6c] uppercase font-bold block">
+                          Select Day / Session
+                        </label>
+                        {selectedSlots.banquet && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSlots({ ...selectedSlots, banquet: '' })}
+                            className="text-[10px] text-red-600 font-bold hover:underline cursor-pointer"
+                          >
+                            Clear Selection
+                          </button>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-1.5">
                         {['Saturday Lunch', 'Saturday Dinner', 'Sunday Lunch', 'Sunday Dinner'].map(slot => (
                           <button
@@ -3451,11 +3529,29 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
                     </div>
                   </div>
 
-                  <div className="p-6 pt-0">
+                  <div className="p-6 pt-0 flex gap-2">
+                    {selectedSlots.banquet && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSlots({ ...selectedSlots, banquet: '' })}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => showToast(`Banquet Hall booking inquiry (${selectedSlots.banquet}) registered with Society Estate Manager!`, 'success')}
-                      className="w-full py-2 bg-[#825100] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      onClick={() => {
+                        setActiveAmenityPassModal({
+                          type: 'banquet',
+                          title: 'Grand Community Banquet Hall',
+                          slot: selectedSlots.banquet,
+                          passCode: 'PASS-HALL-' + Math.floor(1000 + Math.random() * 8999),
+                          unit: currentUser?.unit || 'Flat A-1204'
+                        });
+                        showToast(`Banquet Hall inquiry (${selectedSlots.banquet}) registered!`, 'success');
+                      }}
+                      className="flex-1 py-2 bg-[#825100] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <span className="material-symbols-outlined text-base">bookmark_added</span>
                       <span>Request Booking</span>
@@ -3683,18 +3779,41 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
+                {selectedPoolForJoinModal.participants?.some(
+                  p => p.residentName === (currentUser?.name || 'Arjun Kumar') || p.unit === (currentUser?.unit || 'Flat A-1204')
+                ) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      serviceApi.optOutPool(
+                        selectedPoolForJoinModal.id,
+                        currentUser?.name || 'Arjun Kumar',
+                        currentUser?.unit || 'Flat A-1204'
+                      );
+                      setPools(serviceApi.getPools());
+                      setSelectedPoolForJoinModal(null);
+                      showToast(`Left group demand pool for ${selectedPoolForJoinModal.serviceTitle || 'Service'}!`, 'info');
+                    }}
+                    className="px-3.5 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl cursor-pointer mr-auto flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-sm">exit_to_app</span>
+                    <span>Leave / Opt Out of Pool</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedPoolForJoinModal(null)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer flex items-center gap-1"
                 >
-                  Cancel
+                  <span className="material-symbols-outlined text-sm">close</span>
+                  <span>Cancel / Exit</span>
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                  className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1"
                 >
-                  Confirm &amp; Join Group Booking
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  <span>Confirm &amp; Join Group Booking</span>
                 </button>
               </div>
             </form>
@@ -4110,6 +4229,95 @@ export const ResidentPortal = ({ currentUser, onNavigate, onLogout }) => {
               >
                 <span className="material-symbols-outlined text-base">check</span>
                 <span>Done! View Active Staff</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Amenity Pass Modal (With Cancel Active Pass and Exit Pass View controls) */}
+      {activeAmenityPassModal && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-200 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-sky-100 text-[#006591] border border-sky-300 flex items-center justify-center font-black text-2xl shrink-0">
+                  <span className="material-symbols-outlined text-2xl">confirmation_number</span>
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-900">Active Amenity Pass Issued</h3>
+                  <p className="text-[11px] text-sky-800 font-semibold">{activeAmenityPassModal.title}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveAmenityPassModal(null)}
+                className="p-1 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-sky-50/70 border border-sky-200 space-y-3 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 font-medium">Pass Holder:</span>
+                <strong className="text-gray-900">{currentUser?.name || 'Arjun Kumar'} ({activeAmenityPassModal.unit})</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 font-medium">Reserved Slot:</span>
+                <span className="font-bold text-[#006591]">{activeAmenityPassModal.slot || 'Selected Today'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 font-medium">Digital Pass ID:</span>
+                <span className="font-mono font-bold text-gray-800">{activeAmenityPassModal.passCode}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-sky-200">
+                <span className="text-gray-600 font-medium">Access Gate:</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                  Active Turnstile QR
+                </span>
+              </div>
+            </div>
+
+            {/* Visual QR Code Mock */}
+            <div className="p-3 bg-white rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-2">
+              <div className="w-32 h-32 bg-slate-900 rounded-xl flex items-center justify-center text-white p-2">
+                <div className="w-full h-full border-2 border-dashed border-sky-400 rounded flex flex-col items-center justify-center text-[10px] font-mono text-center">
+                  <span className="material-symbols-outlined text-3xl text-sky-400 mb-1">qr_code_2</span>
+                  <span>{activeAmenityPassModal.passCode}</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-500 font-medium">Scan at Clubhouse Reader or Swimming Pool Gate</p>
+            </div>
+
+            {/* Action Buttons: Cancel Active Pass OR Exit View */}
+            <div className="pt-2 flex items-center gap-2 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeAmenityPassModal.type === 'pool') {
+                    setSelectedSlots({ ...selectedSlots, pool: '' });
+                  } else if (activeAmenityPassModal.type === 'badminton') {
+                    setSelectedSlots({ ...selectedSlots, badminton: '' });
+                  } else if (activeAmenityPassModal.type === 'banquet') {
+                    setSelectedSlots({ ...selectedSlots, banquet: '' });
+                  }
+                  setActiveAmenityPassModal(null);
+                  showToast(`Cancelled active reservation for ${activeAmenityPassModal.title}! Slot released.`, 'info');
+                }}
+                className="flex-1 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+              >
+                <span className="material-symbols-outlined text-base">cancel</span>
+                <span>Cancel Active Pass</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAmenityPassModal(null)}
+                className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer flex items-center justify-center gap-1"
+              >
+                <span className="material-symbols-outlined text-base">logout</span>
+                <span>Done / Exit Pass</span>
               </button>
             </div>
           </div>
